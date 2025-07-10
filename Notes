@@ -1,0 +1,27 @@
+Virtual Env:
+
+`pip3 install pipenv`
+
+Now, move to the dir where you want the virtual env to be, there:
+`pipenv install django`
+
+(A virtual env is created at a location like "/Users/samyak/.local/share/virtualenvs/Ultimate_Django-Wh554gmP", where all the libs are installed.)
+
+Also, `Pipfile` is also created which looks like `requirements.txt`, but `pipenv` automatically adds the packages we install (using `pipenv`) to this file.
+
+Get the path of current venv:
+`pipenv --venv`
+
+Activate the venv:
+`pipenv shell`
+
+IMPORTANT: Make sure whenever you do anything in the terminal inside this dir, venv is activated, the termnial would look like:
+`(Ultimate Django) samyak@Mac Ultimate Django %`
+i.e. dir name prefix in bracket before `samyak@Mac`
+
+
+
+Django:
+
+We can specify the port number explicitly if some other app is running on the default port 8000:
+`python manage.py runserver 9000`
