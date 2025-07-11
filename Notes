@@ -18,8 +18,8 @@ Activate the venv:
 `pipenv shell`
 
 IMPORTANT: Make sure whenever you do anything in the terminal inside this dir, venv is activated, the termnial would look like:
-`(Ultimate Django) samyak@Mac Ultimate Django %`
-i.e. dir name prefix in bracket before `samyak@Mac`
+`(Ultimate Django) samyak@Mac Ultimate Django %` or `Ultimate Djangosamyak@Mac Ultimate Django %`
+i.e. dir name prefix before `samyak@Mac`
 
 ## Django Fundamentals > Creating Your First App
 
@@ -46,6 +46,7 @@ We can replace Django's default template engine with a preferred template engine
 
 Important: We don't use templates in Django that often now, we use Django to build APIs.
 
-## 
+## Django Fundamentals > Using Django Debug Toolbar
 
-
+https://django-debug-toolbar.readthedocs.io/en/latest/installation.html:
+`pipenv install django-debug-toolbar`

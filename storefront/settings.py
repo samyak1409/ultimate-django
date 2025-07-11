@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     #   'django.contrib.sessions',  # temp memory on server to store user data, commented out since we don't use it nowadays
     "django.contrib.messages",  # one time notifications
     "django.contrib.staticfiles",  # like css, images, etc.
-    "playground",
+    "playground",  # our app
+    "debug_toolbar",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#install-the-app
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -48,6 +50,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configure-internal-ips
 ]
 
 ROOT_URLCONF = "storefront.urls"
