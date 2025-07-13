@@ -57,14 +57,12 @@ That is, the directory name appears as a prefix before `samyak@Mac`.
 
 https://en.wikipedia.org/wiki/Django_(web_framework):
 
-It follows the model–template–views (MTV) architectural pattern.
-Despite having its own nomenclature (such as naming the callable objects generating the HTTP responses "views"), the core Django framework can be seen as an MVC architecture.
-
-It consists of:
-
-* an object-relational mapper (ORM) that mediates between data models (defined as Python classes) and a relational database ("Model"),
-* a system for processing HTTP requests with a web templating system ("View"),
-* and a regular-expression-based URL dispatcher ("Controller").
+> It follows the model–template–views (MTV) architectural pattern.
+> Despite having its own nomenclature (such as naming the callable objects generating the HTTP responses "views"), the core Django framework can be seen as an MVC architecture.  
+> It consists of:  
+> -- an object-relational mapper (ORM) that mediates between data models (defined as Python classes) and a relational database ("Model"),  
+> -- a system for processing HTTP requests with a web templating system ("View"),  
+> -- and a regular-expression-based URL dispatcher ("Controller").
 
 We can specify the port number explicitly if some other app is running on the default port 8000:
 
@@ -74,8 +72,8 @@ python manage.py runserver 9000
 
 See `INSTALLED_APPS` in `settings.py`.
 
-* `apps.py` – Should've been named `app_config.py` instead, since it contains the app's configuration.
-* `views.py` – Again, the name is misleading. It's actually a request handler. "Views" usually refer to templates or HTML in web development.
+- `apps.py` – Should've been named `app_config.py` instead, since it contains the app's configuration.
+- `views.py` – Again, the name is misleading. It's actually a request handler. "Views" usually refer to templates or HTML in web development.
   "Views" in other frameworks = "Templates" in Django.
 
 ## Django Fundamentals > Writing Views
@@ -86,11 +84,11 @@ Views or view functions take a request and return a response.
 
 We can replace Django's default template engine with a preferred template engine if we want.
 
-Important: We don't use templates in Django that often now. Django is primarily used to build APIs.
+> Important: We don't use templates in Django that often now. Django is primarily used to build APIs.
 
 ## Django Fundamentals > Using Django Debug Toolbar
 
-https://django-debug-toolbar.readthedocs.io/en/latest/installation.html:  
+https://django-debug-toolbar.readthedocs.io/en/latest/installation.html:
 
 Install with:
 
