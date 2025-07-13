@@ -1,0 +1,14 @@
+from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.auth.models import User
+
+
+class LikedItem(models.Model):
+
+    # To define a generic relationship, we need to define three fields:
+    content_type = models.ForeignKey(to=ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)

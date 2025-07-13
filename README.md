@@ -95,3 +95,100 @@ Install with:
 ```bash
 pipenv install django-debug-toolbar
 ```
+
+## Building a Data Model > Introduction to Data Modeling
+
+Types of relationships:
+- One to One
+- One to Many
+- Many to Many
+
+## Building a Data Model > Organizing Models in Apps
+
+https://en.wikipedia.org/wiki/Monolithic_application - All the models in single app.  
+Problem: Complexity
+
+https://en.wikipedia.org/wiki/Microservices - Multiple apps containing only a few models each.  
+Problem: Interdependence i.e. called Coupling
+
+Middle ground is the way to go, such that all the apps:
+- are self-contained / high cohesion (focus): i.e. if we `pip` install an app in a different project, we don't need to install another app(s) just to make the models of the first app work correctly
+- have zero/minimal coupling
+
+## Building a Data Model > Creating Models
+
+This document contains all the API references of `Field` including the field options and field types Django offers:  
+https://docs.djangoproject.com/en/stable/ref/models/fields
+
+https://docs.djangoproject.com/en/5.2/ref/models/fields/#floatfield:  
+> `FloatField` vs. `DecimalField`  
+> The [`FloatField`](https://docs.djangoproject.com/en/5.2/ref/models/fields/#floatfield) class is sometimes mixed up with the [`DecimalField`](https://docs.djangoproject.com/en/5.2/ref/models/fields/#decimalfield) class. Although they both represent real numbers, they represent those numbers differently. `FloatField` uses Python’s `float` type internally, while `DecimalField` uses Python’s `Decimal` type. For information on the difference between the two, see Python’s documentation for the [`decimal`](https://docs.python.org/3/library/decimal.html#module-decimal) module.
+
+https://docs.python.org/3/library/decimal.html#module-decimal:  
+> The `decimal` module provides support for fast correctly rounded decimal floating-point arithmetic.
+
+Basically, `FloatField` has rounding errors, hence, always use `DecimalField` for sensitive fields like monetory values, which should be completely accurate.
+
+Why we should just use `CharField.max_length = 255` in most cases instead of more precisely calculated maxes for small fields like `first_name`, `phone`:
+- https://chatgpt.com/share/687272f9-c25c-800a-af95-c791f3dbb5be
+- https://g.co/gemini/share/152db050dbdf
+
+Note: Django creates a primary key `id` for every model by default, unless we define a particular field with `primary_key=True`.
+
+## Building a Data Model > Defining One-to-one Relationships
+
+`models.OneToOneField`
+
+`on_delete` options:  
+https://docs.djangoproject.com/en/5.2/ref/models/fields/#django.db.models.ForeignKey.on_delete
+
+Some of which are:
+- `models.CASCADE`: Will delete the child record.
+- `models.SET_NULL`: Will set the foreign key to NULL, record stays.
+- `models.SET_DEFAULT`: Will set the foreign key to its default val, record stays.
+- `models.PROTECT`: Will prevent deleting the parent record if a child record is associated, first child record would be needed to be deleted.
+
+Child record is the one which have a foreign key relationship in its definition. E.g. Parent: `Customer`, Child: `Address`  
+In `Address` model definition:  
+`customer = models.OneToOneField()`
+
+Also, Django automatically creates a reverse relationship in the parent i.e. `Customer` class, named `address`.  
+But why? We can already get address from customer and vice versa, then why do we need this?
+
+## Building a Data Model > Defining a One-to-many Relationship
+
+`models.ForeignKey`
+
+Note: If we want to define a foreign relationship, the other class needs to be defined above in order to reference it.  
+If that's not possible (in case of circular relationship), pass the name of the class **as a string**.  
+(But, only do this in case of circular relationship, not when you can just move the class above, since if we ever wanted to rename the class, we might forget to rename in the string.)
+
+## Building a Data Model > Defining Many-to-many Relationships
+
+`models.ManyToManyField`
+
+## Building a Data Model > Resolving Circular Relationships
+
+See `store.models.Collection` class.
+
+To avoid name clash in case of circular dependency:
+- If you don't want the reverse relation: Just add `related_name='+'` to tell Django to not create a reverse relationship for this particular relationship field.
+- Else, use `related_name` to give the field a different name.
+
+https://docs.djangoproject.com/en/5.2/ref/models/fields/#django.db.models.ForeignKey.related_name
+
+## Building a Data Model > Generic Relationships
+
+As discussed in `Organizing Models in Apps`, we've a seperate app `tags`.  
+Now, to define the model, we should use a generic `ContentType` model instead of our actual model(s). So that the app is actually not related, and can be used in any other project **as is**.
+
+> `ContentType` model is specifically made for allowing generic relationships. It's there in the pre-installed django app `contenttypes`.
+
+To define a generic relationship, we need to define three fields in total:
+```python
+content_type = models.ForeignKey(to=ContentType, on_delete=...)
+object_id = models.PositiveIntegerField()
+content_object = GenericForeignKey()
+```
+
+> Not completely understood...

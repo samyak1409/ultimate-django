@@ -37,8 +37,11 @@ INSTALLED_APPS = [
     #   'django.contrib.sessions',  # temp memory on server to store user data, commented out since we don't use it nowadays
     "django.contrib.messages",  # one time notifications
     "django.contrib.staticfiles",  # like css, images, etc.
-    "playground",  # our app
+    "playground",
     "debug_toolbar",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#install-the-app
+    "store",
+    "tags",
+    "likes",
 ]
 
 MIDDLEWARE = [
