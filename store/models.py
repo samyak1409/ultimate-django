@@ -23,9 +23,15 @@ class Product(models.Model):
 
     title = models.CharField(max_length=255)  # -> varchar(255)
 
+    slug = models.SlugField()
+    # What's slug?
+    # e.g. "everyone-is-writing-wrong-time-complexit-6gil" in
+    # https://leetcode.com/problems/partition-string/solutions/6923792/everyone-is-writing-wrong-time-complexit-6gil
+    # is slug. It's made from the title, and is for search engines to find and rank our content better. It's basically a SEO technique.
+
     description = models.TextField()
 
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     # `FloatField` has rounding errors, and sensitive fields like `price` should be very accurate
     # and max price = 9999.99, digit counting concept is same as that in sql
 
@@ -114,6 +120,8 @@ class Address(models.Model):
     street = models.CharField(max_length=255)
 
     city = models.CharField(max_length=255)
+
+    zip = models.CharField(max_length=255)
 
     # If we want to allow only single address for a customer:
     # customer = models.OneToOneField(to=Customer, on_delete=models.CASCADE, primary_key=True)
