@@ -450,7 +450,7 @@ def home(request):
         )
 
     # Deleting Objects:
-    if 1:
+    if 0:
 
         # Unlike above two, deleting is very straight-forward since `delete()` is available in both `QuerySet` and `models.Model`:
         print(Collection(pk=18).delete())
