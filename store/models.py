@@ -9,7 +9,7 @@ class Collection(models.Model):
         to="Product", on_delete=models.SET_NULL, null=True, related_name="+"
     )
     # IMPORTANT: Mosh has used `ForeignKey` but since any product can belong to only a single collection, any two collections won't have a same featured product, and hence no need of `ForeignKey`.
-    # `related_name='+'`: avoid name clash
+    # `related_name='+'`: avoid name clash by telling django to not create a reverse relationship field for this field.
 
 
 class Promotion(models.Model):
@@ -74,7 +74,7 @@ class Customer(models.Model):
     birth_date = models.DateField(null=True)
 
     membership = models.CharField(
-        max_length=255, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_CHOICES[0][0]
+        max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_CHOICES[0][0]
     )
 
 
@@ -85,7 +85,7 @@ class Order(models.Model):
     placed_at = models.DateTimeField(auto_now_add=True)
 
     payment_status = models.CharField(
-        max_length=255,
+        max_length=1,
         choices=PAYMENT_STATUS_CHOICES,
         default=PAYMENT_STATUS_CHOICES[0][0],
     )
@@ -121,8 +121,6 @@ class Address(models.Model):
 
     city = models.CharField(max_length=255)
 
-    zip = models.CharField(max_length=255)
-
     # If we want to allow only single address for a customer:
     # customer = models.OneToOneField(to=Customer, on_delete=models.CASCADE, primary_key=True)
     # `primary_key=True` because since we already have OneToOne relationship, we can use the customer only as a primary key
@@ -142,6 +140,6 @@ class CartItem(models.Model):
 
     cart = models.ForeignKey(to=Cart, on_delete=models.CASCADE)
 
-    product = models.OneToOneField(to=Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
 
     quantity = models.PositiveSmallIntegerField()
