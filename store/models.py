@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class Collection(models.Model):
@@ -10,6 +11,12 @@ class Collection(models.Model):
     )
     # IMPORTANT: Mosh has used `ForeignKey` but since any product can belong to only a single collection, any two collections won't have a same featured product, and hence no need of `ForeignKey`.
     # `related_name='+'`: avoid name clash by telling django to not create a reverse relationship field for this field.
+
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ["title"]
 
 
 class Promotion(models.Model):
@@ -29,9 +36,11 @@ class Product(models.Model):
     # https://leetcode.com/problems/partition-string/solutions/6923792/everyone-is-writing-wrong-time-complexit-6gil
     # is slug. It's made from the title, and is for search engines to find and rank our content better. It's basically a SEO technique.
 
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
 
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(
+        max_digits=6, decimal_places=2, validators=[MinValueValidator(limit_value=0.01)]
+    )
     # `FloatField` has rounding errors, and sensitive fields like `price` should be very accurate
     # and max price = 9999.99, digit counting concept is same as that in sql
 
@@ -48,7 +57,10 @@ class Product(models.Model):
     # If we allowed the products belonging to none of the collections, we would've used `on_delete=models.SET_NULL, null=True`.
     # But, we've set to only allow deletion of a collection, if none of the products belong to it.
 
-    promotions = models.ManyToManyField(to=Promotion)
+    promotions = models.ManyToManyField(to=Promotion, blank=True)
+
+    def __str__(self) -> str:
+        return self.title
 
 
 class Customer(models.Model):
@@ -76,6 +88,9 @@ class Customer(models.Model):
     membership = models.CharField(
         max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_CHOICES[0][0]
     )
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
 
 class Order(models.Model):
