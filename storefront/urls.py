@@ -20,12 +20,11 @@ from django.urls import path, include
 from debug_toolbar.toolbar import debug_toolbar_urls
 
 # Change admin's headings if required:
-# admin.site.site_header = 'Storefront Admin'
-# admin.site.index_title = 'Admin'
+# admin.site.site_header = "Storefront Admin"
+# admin.site.index_title = "Admin"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "playground/", include("playground.urls")
-    ),  # include URLs from the playground app
+    path("playground/", include("playground.urls")),
+    path("store/", include("store.urls")),
 ] + debug_toolbar_urls()  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-urls

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",  # temp memory on server to store user data
     "django.contrib.messages",  # one time notifications
     "django.contrib.staticfiles",  # like css, images, etc.
+    "rest_framework",
     "playground",
     "debug_toolbar",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#install-the-app
     "store",
@@ -141,3 +142,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# In DRF, by default decimal values convert to str, change that:
+REST_FRAMEWORK = {"COERCE_DECIMAL_TO_STRING": False}
