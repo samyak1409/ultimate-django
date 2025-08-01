@@ -37,9 +37,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",  # temp memory on server to store user data
     "django.contrib.messages",  # one time notifications
     "django.contrib.staticfiles",  # like css, images, etc.
-    "rest_framework",
+    "rest_framework",  # toolkit for building Web APIs
+    "debug_toolbar",  # display various debug information
+    "django_filters",  # easily construct complex searches and filters
     "playground",
-    "debug_toolbar",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#install-the-app
     "store",
     "store_custom",
     "tags",
@@ -143,5 +144,17 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# In DRF, by default decimal values convert to str, change that:
-REST_FRAMEWORK = {"COERCE_DECIMAL_TO_STRING": False}
+
+REST_FRAMEWORK = {
+    # In DRF, by default decimal values convert to str, change that:
+    "COERCE_DECIMAL_TO_STRING": False,
+    # https://www.django-rest-framework.org/api-guide/filtering/#api-guide:
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    # https://www.django-rest-framework.org/api-guide/pagination/#api-reference:
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}

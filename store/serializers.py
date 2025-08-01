@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Collection
+from .models import Product, Collection, Review
 from decimal import Decimal
 
 
@@ -9,7 +9,8 @@ class CollectionSerializer(serializers.ModelSerializer):
         model = Collection
         fields = ["id", "title", "product_count"]
 
-    product_count = serializers.IntegerField()
+    product_count = serializers.IntegerField(read_only=True)
+    # `read_only=True` so that this field can't be changed using `POST`/`PUT`/`PATCH`.
 
     # id = serializers.IntegerField()
     # title = serializers.CharField(max_length=255)
@@ -55,3 +56,16 @@ class ProductSerializer(serializers.ModelSerializer):
     # 1. "AssertionError at /store/products/: `HyperlinkedRelatedField` requires the request in the serializer context. Add `context={'request': request}` when instantiating the serializer."
     # 2. `name="collection-detail"` in `urls.urlpatterns.path()`
     # 3. "collections/<int:pk>/" in `urls.urlpatterns.path()` instead of  "collections/<int:id>/", this is DRF's default convention.
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        exclude = ["product"]
+
+    # Overriding to get the product (using product id from url), and attach (since it's a related field) to the review:
+    def create(self, validated_data):
+        return Review.objects.create(
+            product_id=self.context["product_id"], **validated_data
+        )

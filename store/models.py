@@ -158,3 +158,16 @@ class CartItem(models.Model):
     product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
 
     quantity = models.PositiveSmallIntegerField()
+
+
+class Review(models.Model):
+
+    text = models.TextField()
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
+
+    customer = models.ForeignKey(to=Customer, on_delete=models.CASCADE)
+
+    # Keeping the fields different from mosh, his looks bad to me. Check the video "Building the Reviews API" for his fields.
