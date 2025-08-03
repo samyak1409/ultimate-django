@@ -7,10 +7,14 @@ from . import views
 router = DefaultRouter()
 router.register(prefix="products", viewset=views.ProductViewSet, basename="products")
 router.register(prefix="collections", viewset=views.CollectionViewSet)
+router.register(prefix="carts", viewset=views.CartViewSet)
 # print(router.urls)  # <class 'list'>
 
-products_router = NestedDefaultRouter(router, "products", lookup="product")
-products_router.register("reviews", views.ReviewViewSet, basename="product-reviews")
+product_router = NestedDefaultRouter(router, "products", lookup="product")
+product_router.register("reviews", views.ReviewViewSet, basename="product-reviews")
+
+cart_router = NestedDefaultRouter(router, "carts", lookup="cart")
+cart_router.register("items", views.CartItemViewSet, basename="cart-items")
 
 urlpatterns = [
     # path("products/", views.product_list),
@@ -18,4 +22,4 @@ urlpatterns = [
     # path("products/<int:pk>/", views.ProductDetail.as_view()),
     # path("collections/", views.CollectionList.as_view()),
     # path("collections/<int:pk>/", views.CollectionDetail.as_view(), name="collection-detail"),
-] + (router.urls + products_router.urls)
+] + (router.urls + product_router.urls + cart_router.urls)

@@ -7,9 +7,21 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.viewsets import ModelViewSet
-from .models import Product, Collection, OrderItem, Review
-from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.mixins import (
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+)
+from .models import Product, Collection, OrderItem, Review, Cart, CartItem
+from .serializers import (
+    ProductSerializer,
+    CollectionSerializer,
+    ReviewSerializer,
+    CartSerializer,
+    CartItemSerializer,
+    UpdateCartItemSerializer,
+)
 from .filters import ProductFilter
 
 
@@ -327,3 +339,40 @@ class ReviewViewSet(ModelViewSet):
     # Overriding to pass the product id from url to `ReviewSerializer.create`:
     def get_serializer_context(self):
         return {"product_id": self.kwargs["product_pk"]}
+
+
+class CartViewSet(
+    CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet
+):
+
+    serializer_class = CartSerializer
+    queryset = Cart.objects.prefetch_related("cartitem_set__product")
+
+
+class CartItemViewSet(ModelViewSet):
+
+    http_method_names = ["get", "post", "patch", "delete"]
+    # disallow `put` method to make `UpdateCartItemSerializer.Meta.fields` work, else it keeps showing `product` even when it's not in the `fields`
+
+    # serializer_class = CartItemSerializer
+    # Instead of above, dynamically depending on request method:
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return UpdateCartItemSerializer
+            # Which has `fields = ["quantity"]`.
+        # For all 3 other methods:
+        return CartItemSerializer
+
+    # queryset = CartItem.objects.all()
+    # Above would return items across all the carts!!
+    # But what we instead want is, items from a single cart. Just like we did in `ReviewViewSet`.
+    # So, we need `get_queryset`.
+
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
+            "product"
+        )
+
+    # Overriding to pass the cart id from url to `CartItemSerializer.save`:
+    def get_serializer_context(self):
+        return {"cart_id": self.kwargs["cart_pk"]}

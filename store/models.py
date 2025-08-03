@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from uuid import uuid4
 
 
 class Collection(models.Model):
@@ -39,7 +40,7 @@ class Product(models.Model):
     description = models.TextField(null=True, blank=True)
 
     unit_price = models.DecimalField(
-        max_digits=6, decimal_places=2, validators=[MinValueValidator(limit_value=0.01)]
+        max_digits=6, decimal_places=2, validators=[MinValueValidator(0.01)]
     )
     # `FloatField` has rounding errors, and sensitive fields like `price` should be very accurate
     # and max price = 9999.99, digit counting concept is same as that in sql
@@ -148,6 +149,9 @@ class Address(models.Model):
 
 class Cart(models.Model):
 
+    id = models.UUIDField(primary_key=True, default=uuid4)
+    # See Notes > Part 2 > 3. > [`Cart`] Problem with Default `id` Field
+
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -157,7 +161,11 @@ class CartItem(models.Model):
 
     product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
 
-    quantity = models.PositiveSmallIntegerField()
+    quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        # Enforce Unique Product per Cart / Prevent duplicate cart items for same product:
+        unique_together = [["cart", "product"]]
 
 
 class Review(models.Model):
