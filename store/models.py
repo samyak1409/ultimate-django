@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from uuid import uuid4
 
@@ -66,6 +67,8 @@ class Product(models.Model):
 
 class Customer(models.Model):
 
+    user = models.OneToOneField(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
     # https://docs.djangoproject.com/en/5.2/ref/models/fields/#choices
     # The first element in each tuple is the actual value to be set on the model, and the second element is the human-readable name.
     MEMBERSHIP_CHOICES = [
@@ -76,11 +79,10 @@ class Customer(models.Model):
     # Why we often use short codes like "B", "S", "G" in the database instead of storing "Bronze", "Silver", "Gold" directly:
     # https://chatgpt.com/share/687278b8-6010-800a-97e1-408b28dfac8c
 
-    first_name = models.CharField(max_length=255)
-
-    last_name = models.CharField(max_length=255)
-
-    email = models.EmailField(unique=True)
+    # Now, since we've linked this model to user model, that model already have following fields:
+    # first_name = models.CharField(max_length=255)
+    # last_name = models.CharField(max_length=255)
+    # email = models.EmailField(unique=True)
 
     phone = models.CharField(max_length=255)
 
@@ -91,7 +93,7 @@ class Customer(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.user.first_name} {self.user.last_name}"
 
 
 class Order(models.Model):
@@ -110,6 +112,11 @@ class Order(models.Model):
     # According to me, `on_delete=models.SET_NULL, null=True` should be used. So that customer can be deleted, their order would still be present.
     # (We can also add a `deleted_user` customer in our `Customer` table, and then set the above to this customer.)
     # Mosh is using `on_delete=models.PROTECT` to protect deleting of the orders if a customer is deleted, but, that stops us from deleting a customer!!
+
+    class Meta:
+        permissions = [
+            ("cancel_order", "Can cancel order"),
+        ]
 
 
 class OrderItem(models.Model):

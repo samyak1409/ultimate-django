@@ -42,9 +42,9 @@ INSTALLED_APPS = [
     "django_filters",  # easily construct complex searches and filters
     "playground",
     "store",
-    "store_custom",
     "tags",
     "likes",
+    "core",
 ]
 
 MIDDLEWARE = [
@@ -145,6 +145,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+# DRF Settings:
 REST_FRAMEWORK = {
     # In DRF, by default decimal values convert to str, change that:
     "COERCE_DECIMAL_TO_STRING": False,
@@ -158,3 +159,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
+
+
+# Telling django to use this custom User model (defined in `core.models`, extends django's `AbstractUser`) for auth:
+AUTH_USER_MODEL = "core.User"
