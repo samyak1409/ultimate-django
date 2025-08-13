@@ -27,4 +27,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("playground/", include("playground.urls")),
     path("store/", include("store.urls")),
+    # https://djoser.readthedocs.io/en/latest/getting_started.html#configuration:
+    path("auth/", include("djoser.urls")),
+    # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:
+    path("auth/", include("djoser.urls.jwt")),
 ] + debug_toolbar_urls()  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-urls

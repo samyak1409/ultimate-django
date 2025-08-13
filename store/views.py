@@ -1,7 +1,7 @@
 # from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,9 +11,11 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.mixins import (
     CreateModelMixin,
     RetrieveModelMixin,
+    UpdateModelMixin,
     DestroyModelMixin,
 )
-from .models import Product, Collection, OrderItem, Review, Cart, CartItem
+from rest_framework import permissions
+from .models import Product, Collection, OrderItem, Review, Cart, CartItem, Customer
 from .serializers import (
     ProductSerializer,
     CollectionSerializer,
@@ -21,8 +23,10 @@ from .serializers import (
     CartSerializer,
     CartItemSerializer,
     UpdateCartItemSerializer,
+    CustomerSerializer,
 )
 from .filters import ProductFilter
+from . import permissions as custom_permissions
 
 
 # def product_list(request: HttpRequest) -> HttpResponse:
@@ -213,11 +217,11 @@ class ProductViewSet(ModelViewSet):
     # Advanced filtering (check `ProductFilter`):
     filterset_class = ProductFilter
 
-    # Searching:
     search_fields = ["title"]
 
-    # Ordering:
     ordering_fields = ["unit_price", "last_update"]
+
+    permission_classes = [custom_permissions.IsAdminOrReadOnly]
 
     def destroy(self, request, *args, **kwargs):
         if OrderItem.objects.filter(product_id=kwargs["pk"]).exists():
@@ -315,6 +319,8 @@ class CollectionViewSet(ModelViewSet):
     queryset = Collection.objects.annotate(product_count=Count("product"))
     serializer_class = CollectionSerializer
 
+    permission_classes = [custom_permissions.IsAdminOrReadOnly]
+
     def destroy(self, request, *args, **kwargs):
         if Product.objects.filter(collection_id=kwargs["pk"]).exists():
             return Response(
@@ -376,3 +382,33 @@ class CartItemViewSet(ModelViewSet):
     # Overriding to pass the cart id from url to `CartItemSerializer.save`:
     def get_serializer_context(self):
         return {"cart_id": self.kwargs["cart_pk"]}
+
+
+class CustomerViewSet(ModelViewSet):
+
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+    permission_classes = [custom_permissions.FullDjangoModelPermissions]
+
+    @action(
+        detail=False,
+        methods=["GET", "PUT"],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def me(self, request: Request):
+        customer = Customer.objects.get_or_create(user_id=request.user.id)[0]
+        if request.method == "GET":
+            serializer = CustomerSerializer(customer)
+        elif request.method == "PUT":
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        permission_classes=[custom_permissions.ViewCustomerHistoryPermission],
+    )
+    def history(self, request: Request, pk: int):
+        return Response(pk)

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",  # toolkit for building Web APIs
     "debug_toolbar",  # display various debug information
     "django_filters",  # easily construct complex searches and filters
+    "djoser",
     "playground",
     "store",
     "tags",
@@ -158,8 +161,29 @@ REST_FRAMEWORK = {
     # https://www.django-rest-framework.org/api-guide/pagination/#api-reference:
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
 }
 
 
 # Telling django to use this custom User model (defined in `core.models`, extends django's `AbstractUser`) for auth:
 AUTH_USER_MODEL = "core.User"
+
+
+SIMPLE_JWT = {
+    # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html:
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:
+    "AUTH_HEADER_TYPES": ("JWT",),
+}
+
+# https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:
+DJOSER = {
+    "TOKEN_MODEL": None,
+    "SERIALIZERS": {
+        "user_create": "core.serializers.CustomUserCreateSerializer",
+        "current_user": "core.serializers.CustomUserSerializer",
+    },
+}

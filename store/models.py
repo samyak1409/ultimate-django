@@ -95,6 +95,11 @@ class Customer(models.Model):
     def __str__(self) -> str:
         return f"{self.user.first_name} {self.user.last_name}"
 
+    class Meta:
+        permissions = [
+            ("view_history", "Can view history"),
+        ]
+
 
 class Order(models.Model):
 
