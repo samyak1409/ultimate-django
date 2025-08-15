@@ -174,7 +174,7 @@ AUTH_USER_MODEL = "core.User"
 
 SIMPLE_JWT = {
     # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html:
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:
     "AUTH_HEADER_TYPES": ("JWT",),
 }

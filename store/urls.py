@@ -9,6 +9,7 @@ router.register(prefix="products", viewset=views.ProductViewSet, basename="produ
 router.register(prefix="collections", viewset=views.CollectionViewSet)
 router.register(prefix="carts", viewset=views.CartViewSet)
 router.register(prefix="customers", viewset=views.CustomerViewSet)
+router.register(prefix="orders", viewset=views.OrderViewSet, basename="orders")
 # print(router.urls)  # <class 'list'>
 
 product_router = NestedDefaultRouter(router, "products", lookup="product")

@@ -15,7 +15,16 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 from rest_framework import permissions
-from .models import Product, Collection, OrderItem, Review, Cart, CartItem, Customer
+from .models import (
+    Product,
+    Collection,
+    OrderItem,
+    Review,
+    Cart,
+    CartItem,
+    Customer,
+    Order,
+)
 from .serializers import (
     ProductSerializer,
     CollectionSerializer,
@@ -24,6 +33,9 @@ from .serializers import (
     CartItemSerializer,
     UpdateCartItemSerializer,
     CustomerSerializer,
+    OrderSerializer,
+    CreateOrderSerializer,
+    UpdateOrderSerializer,
 )
 from .filters import ProductFilter
 from . import permissions as custom_permissions
@@ -397,7 +409,7 @@ class CustomerViewSet(ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request: Request):
-        customer = Customer.objects.get_or_create(user_id=request.user.id)[0]
+        customer = Customer.objects.get(user_id=request.user.id)
         if request.method == "GET":
             serializer = CustomerSerializer(customer)
         elif request.method == "PUT":
@@ -412,3 +424,42 @@ class CustomerViewSet(ModelViewSet):
     )
     def history(self, request: Request, pk: int):
         return Response(pk)
+
+
+class OrderViewSet(ModelViewSet):
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateOrderSerializer
+        if self.request.method == "PATCH":
+            return UpdateOrderSerializer
+        return OrderSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Order.objects.prefetch_related("orderitem_set__product")
+
+        customer = Customer.objects.only("id").get(user_id=user.id)
+        return Order.objects.filter(customer_id=customer.id).prefetch_related(
+            "orderitem_set__product"
+        )
+
+    # (Read: Notes > Part 2 > 6. Designing and Building the Orders API > Returning the Created Order)
+    def create(self, request, *args, **kwargs):
+        input_sr = CreateOrderSerializer(
+            data=request.data, context={"user_id": self.request.user.id}
+        )
+        input_sr.is_valid(raise_exception=True)
+        order = input_sr.save()
+
+        output_sr = OrderSerializer(order)
+        return Response(output_sr.data)
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE"]:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
+    http_method_names = ["post", "get", "patch", "delete", "head", "options"]
