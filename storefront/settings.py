@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     "rest_framework",  # toolkit for building Web APIs
     "debug_toolbar",  # display various debug information
     "django_filters",  # easily construct complex searches and filters
-    "djoser",
+    "djoser",  # REST implementation of Django authentication system
+    "corsheaders",  # for handling the server headers required for CORS
     "playground",
     "store",
     "tags",
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#setup
     "debug_toolbar.middleware.DebugToolbarMiddleware",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -64,6 +67,9 @@ MIDDLEWARE = [
 INTERNAL_IPS = [
     "127.0.0.1",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configure-internal-ips
 ]
+
+CORS_ALLOWED_ORIGINS = ["null"]  # allow requests from local files (file://...)
+
 
 ROOT_URLCONF = "storefront.urls"
 
@@ -141,6 +147,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+
+
+# User-uploaded files:
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

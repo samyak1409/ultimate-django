@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Image Uploader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-4" style="max-width: 600px;">
+        <div id="alertContainer"></div>
+
+        <div class="progress d-none mb-3">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0"
+                aria-valuemin="0" aria-valuemax="100">
+            </div>
+        </div>
+
+        <form id="uploadForm">
+            <div class="mb-3">
+                <label for="imageInput" class="form-label">Select Image</label>
+                <input id="imageInput" class="form-control" type="file" accept="image/png, image/jpeg" />
+            </div>
+            <button id="uploadButton" class="btn btn-primary" type="submit" disabled>
+                Upload
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // --- Get references to HTML elements ---
+        const imageInput = document.getElementById('imageInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const uploadForm = document.getElementById('uploadForm');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.querySelector('.progress');
+        const alertContainer = document.getElementById('alertContainer');
+
+        // --- Helper Functions ---
+        const showAlert = (message, type) => {
+            alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        };
+
+        const setProgress = (percent) => {
+            progressBar.style.width = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+            progressBar.innerText = percent + '%';
+        };
+
+        // --- Event Listeners ---
+        // 1. Enable the upload button only when a file is selected
+        imageInput.addEventListener('change', () => {
+            uploadButton.disabled = imageInput.files.length === 0;
+        });
+
+        // 2. Handle the form submission
+        uploadForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent the browser from submitting the form normally
+
+            const file = imageInput.files[0];
+            if (!file) return;
+
+            // --- UI Updates for Upload Start ---
+            showAlert('', 'info'); // Clear previous alerts
+            progressContainer.classList.remove('d-none'); // Show progress bar
+            setProgress(0);
+            uploadButton.disabled = true;
+
+            // --- Prepare and Send the Request ---
+            const formData = new FormData();
+            // This key 'image' must match what your Django API expects
+            formData.append('image', file);
+
+            const xhr = new XMLHttpRequest();
+            const apiUrl = 'http://127.0.0.1:8000/store/products/1/images/';
+
+            // Listen for upload progress events
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentCompleted = Math.round((e.loaded / e.total) * 100);
+                    setProgress(percentCompleted);
+                }
+            });
+
+            // Listen for when the request is complete (success or failure)
+            xhr.onload = () => {
+                progressContainer.classList.add('d-none'); // Hide progress bar
+                uploadButton.disabled = false; // Re-enable button
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    showAlert('Image uploaded successfully!', 'success');
+                } else {
+                    // Try to parse error message from the Django server response
+                    let errorMessage = `Error: ${xhr.statusText}`;
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        // A common DRF validation error format
+                        if (response.image && Array.isArray(response.image)) {
+                            errorMessage = response.image[0];
+                        } else {
+                            errorMessage = JSON.stringify(response);
+                        }
+                    } catch (e) {
+                        // Fallback if the response isn't JSON
+                    }
+                    showAlert(errorMessage, 'danger');
+                }
+            };
+
+            // Listen for network errors (e.g., server is down, CORS error)
+            xhr.onerror = () => {
+                progressContainer.classList.add('d-none');
+                uploadButton.disabled = false;
+                showAlert('Could not reach the server! Check your connection and CORS settings.', 'danger');
+            };
+
+            xhr.open('POST', apiUrl, true);
+            xhr.send(formData);
+        });
+    </script>
+</body>
+
+</html>

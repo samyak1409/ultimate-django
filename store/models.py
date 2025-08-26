@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from uuid import uuid4
+from .validators import validate_product_image_size
 
 
 class Collection(models.Model):
@@ -63,6 +64,17 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class ProductImage(models.Model):
+
+    image = models.ImageField(
+        upload_to="store/images", validators=[validate_product_image_size]
+    )
+    # store image in `MEDIA_ROOT/store/images/`, path in DB
+
+    product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
+    # delete image(s) if product is deleted
 
 
 class Customer(models.Model):

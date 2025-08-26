@@ -10,6 +10,7 @@ from .models import (
     Customer,
     Order,
     OrderItem,
+    ProductImage,
 )
 from .signals import order_created
 
@@ -33,6 +34,20 @@ class CollectionSerializer(serializers.ModelSerializer):
     # title = serializers.CharField(max_length=255)
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image"]
+        # not including "product" since it's already in the url (/products/1/images/)
+
+    # Overriding to get the product (using product id from url), and attach (since it's a related field) to the image:
+    def create(self, validated_data):
+        return ProductImage.objects.create(
+            product_id=self.context["product_id"], **validated_data
+        )
+
+
 class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -44,6 +59,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "unit_price",
             "price_plus_tax",
             "collection",
+            "productimage_set",
         ]
 
     # id = serializers.IntegerField()
@@ -73,6 +89,8 @@ class ProductSerializer(serializers.ModelSerializer):
     # 1. "AssertionError at /store/products/: `HyperlinkedRelatedField` requires the request in the serializer context. Add `context={'request': request}` when instantiating the serializer."
     # 2. `name="collection-detail"` in `urls.urlpatterns.path()`
     # 3. "collections/<int:pk>/" in `urls.urlpatterns.path()` instead of  "collections/<int:id>/", this is DRF's default convention.
+
+    productimage_set = ProductImageSerializer(many=True, read_only=True)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

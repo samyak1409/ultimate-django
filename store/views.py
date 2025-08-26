@@ -24,6 +24,7 @@ from .models import (
     CartItem,
     Customer,
     Order,
+    ProductImage,
 )
 from .serializers import (
     ProductSerializer,
@@ -36,6 +37,7 @@ from .serializers import (
     OrderSerializer,
     CreateOrderSerializer,
     UpdateOrderSerializer,
+    ProductImageSerializer,
 )
 from .filters import ProductFilter
 from . import permissions as custom_permissions
@@ -214,7 +216,7 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
 # ViewSet:
 class ProductViewSet(ModelViewSet):
 
-    queryset = Product.objects.all()
+    queryset = Product.objects.prefetch_related("productimage_set")
     serializer_class = ProductSerializer
 
     # For applying filtering functionality:
@@ -463,3 +465,17 @@ class OrderViewSet(ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     http_method_names = ["post", "get", "patch", "delete", "head", "options"]
+
+
+class ProductImageViewSet(ModelViewSet):
+
+    serializer_class = ProductImageSerializer
+
+    # Since we've the endpoint `/products/<pk>/images`, we want images to be dynamically fetched on the basis of product's pk,
+    # hence we need to use method instead of attribute:
+    def get_queryset(self):
+        return ProductImage.objects.filter(product_id=self.kwargs["product_pk"])
+
+    # Overriding to pass the product id from url to `ProductImageSerializer.create`:
+    def get_serializer_context(self):
+        return {"product_id": self.kwargs["product_pk"]}

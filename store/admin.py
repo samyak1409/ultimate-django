@@ -24,6 +24,17 @@ class InventoryStatusListFilter(admin.SimpleListFilter):
             return queryset.filter(inventory__lt=10)
 
 
+class ProductImageInline(admin.TabularInline):
+    model = models.ProductImage
+    extra = 1
+    readonly_fields = ["thumbnail"]
+
+    def thumbnail(self, instance: models.ProductImage):
+        if instance.image:  # (mosh has used `instance.image.name != ''`)
+            return format_html(f'<img src="{instance.image.url}" class="thumbnail">')
+        return ""
+
+
 # @admin.register(models.Product)
 # As we're registering `models.Product` with `store_custom.admin.ProductCustomAdmin(ProductAdmin)`.
 # A model can't be registered two times.
@@ -45,6 +56,7 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ["title"]}
     search_fields = ["title"]
     show_facets = admin.ShowFacets.ALWAYS
+    inlines = [ProductImageInline]
 
     @admin.display(ordering="inventory")
     def inventory_status(self, product):
@@ -56,6 +68,9 @@ class ProductAdmin(admin.ModelAdmin):
         self.message_user(
             request, f"Successfully cleared inventory for {count} product(s)."
         )
+
+    class Media:
+        css = {"all": ["store/styles.css"]}
 
 
 @admin.register(models.Collection)
