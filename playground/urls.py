@@ -5,4 +5,5 @@ from . import views
 # URLConf:
 urlpatterns = [
     path("home/", views.home),
+    path("test-mail/", views.test_mail),
 ]

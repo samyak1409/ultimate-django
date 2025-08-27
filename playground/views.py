@@ -17,6 +17,8 @@ from django.db.models import (
 from django.db.models.functions import Concat
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, connection
+from django.core.mail import send_mail, mail_admins, BadHeaderError, EmailMessage
+from templated_mail.mail import BaseEmailMessage
 from store.models import Product, Customer, Collection, Order, OrderItem
 from tags.models import TaggedItem
 
@@ -499,3 +501,39 @@ def home(request):
 
     # return HttpResponse("This is the home page of the playground app.")
     return render(request, template_name="index.html", context={"heading": "Home Page"})
+
+
+def test_mail(request):
+
+    try:
+
+        if 0:
+            send_mail(
+                subject="Testing `send_mail`",
+                message="Hello there!",
+                from_email=None,
+                recipient_list=["samyak65400@gmail.com"],
+                html_message="<h1>Hello there!</h1>",
+            )
+
+        if 0:
+            mail_admins(subject="Testing `mail_admins`", message="Hello admin!")
+
+        if 0:
+            msg = EmailMessage(
+                subject="Testing `EmailMessage` for Attachment",
+                body="PFA",
+                to=["someone@gmail.com"],
+            )
+            msg.attach_file(path="media/playground/bike.jpg")
+            msg.send()
+
+        if 1:
+            BaseEmailMessage(
+                context={"name": "Samyak"}, template_name="mails/hello.html"
+            ).send(to=["someone@gmail.com"])
+
+    except BadHeaderError as e:
+        return HttpResponse(e)
+
+    return HttpResponse("Mails sent.")
