@@ -3,3 +3,8 @@
 .vscode
 
 __pycache__
+
+# Celery
+celerybeat-schedule
+# It is a local database file that Celery Beat uses to keep track of the last run times of your periodic tasks.
+# https://share.google/aimode/tpOPQ1LdIuZSDYoDl

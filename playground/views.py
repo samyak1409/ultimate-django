@@ -21,6 +21,7 @@ from django.core.mail import send_mail, mail_admins, BadHeaderError, EmailMessag
 from templated_mail.mail import BaseEmailMessage
 from store.models import Product, Customer, Collection, Order, OrderItem
 from tags.models import TaggedItem
+from .tasks import notify_customers
 
 
 def home(request):
@@ -537,3 +538,10 @@ def test_mail(request):
         return HttpResponse(e)
 
     return HttpResponse("Mails sent.")
+
+
+def test_celery(request):
+
+    notify_customers.delay(message="Hello from view")
+
+    return HttpResponse("Background task called.")
