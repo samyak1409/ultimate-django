@@ -36,6 +36,11 @@ urlpatterns = [
 ]
 
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-urls:
-urlpatterns += debug_toolbar_urls()
+urlpatterns += debug_toolbar_urls()  # adds in DEBUG only
 
 urlpatterns += static(prefix=settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# adds in DEBUG only
+
+if settings.DEBUG:
+    # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
+    urlpatterns.append(path("silk/", include("silk.urls", namespace="silk")))

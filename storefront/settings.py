@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-z^h%9*k325z6r@h0srqkm(0*h8dyl9$m4u-woq&vibgt&ha=wh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",  # one time notifications
     "django.contrib.staticfiles",  # like css, images, etc.
     "rest_framework",  # toolkit for building Web APIs
-    "debug_toolbar",  # display various debug information
     "django_filters",  # easily construct complex searches and filters
     "djoser",  # REST implementation of Django authentication system
     "corsheaders",  # for handling the server headers required for CORS
@@ -52,10 +51,15 @@ INSTALLED_APPS = [
     "likes",
     "core",
 ]
+if DEBUG:
+    INSTALLED_APPS += [
+        "debug_toolbar",  # display various debug information
+        "silk",  # live profiling and inspection tool
+    ]
+
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#setup
-    "debug_toolbar.middleware.DebugToolbarMiddleware",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -64,6 +68,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+if DEBUG:
+    # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
+    MIDDLEWARE.insert(0, "silk.middleware.SilkyMiddleware")
+    # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
+    MIDDLEWARE.insert(2, "debug_toolbar.middleware.DebugToolbarMiddleware")
+    # Order: Silk, Cors, Toolbar, ...
+
 
 INTERNAL_IPS = [
     "127.0.0.1",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configure-internal-ips
