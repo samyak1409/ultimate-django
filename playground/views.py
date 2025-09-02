@@ -22,6 +22,11 @@ from templated_mail.mail import BaseEmailMessage
 from store.models import Product, Customer, Collection, Order, OrderItem
 from tags.models import TaggedItem
 from .tasks import notify_customers
+import requests
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.views import View
+from django.utils.decorators import method_decorator
 
 
 def home(request):
@@ -545,3 +550,43 @@ def test_celery(request):
     notify_customers.delay(message="Hello from view")
 
     return HttpResponse("Background task called.")
+
+
+# Caching manually:
+def test_cache1(request):
+    """"""
+
+    # Without cache:
+    """
+    # response = requests.get("https://httpbin.org/delay/2")
+    # httpbin.org servers responding very slow right now, above taking 5-10 seconds. So, using example.com:
+    response = requests.get("https://example.com")
+
+    return HttpResponse(response.text)
+    """
+
+    # Cached:
+    if cache.get(key := "random_data") is None:
+        response = requests.get("https://example.com")
+        data = response.text
+        cache.set(key, data)
+
+    return HttpResponse(cache.get(key))
+
+
+# Caching using decorator:
+@cache_page(300)  # seconds
+def test_cache2(request):
+
+    response = requests.get("https://example.com")
+    return HttpResponse(response.text)
+
+
+# Caching using CBV and method decorator:
+class TestCache3(View):
+
+    @method_decorator(cache_page(10))
+    def get(self, request):
+
+        response = requests.get("https://example.com")
+        return HttpResponse(response.text)

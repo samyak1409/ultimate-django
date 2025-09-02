@@ -240,3 +240,17 @@ CELERY_BEAT_SCHEDULE = {
         # "kwargs": {...},
     },
 }
+
+
+# Caching:
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",  # use a DB different from Celery's redis
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
+    }
+}
