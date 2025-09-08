@@ -506,7 +506,9 @@ def home(request):
         # (Always use `with` context manager so that connection is automatically closed even in the case of an Exception.)
 
     # return HttpResponse("This is the home page of the playground app.")
-    return render(request, template_name="index.html", context={"heading": "Home Page"})
+    return render(
+        request, template_name="playground/index.html", context={"heading": "Home Page"}
+    )
 
 
 def test_mail(request):
@@ -531,7 +533,7 @@ def test_mail(request):
                 body="PFA",
                 to=["someone@gmail.com"],
             )
-            msg.attach_file(path="media/playground/bike.jpg")
+            msg.attach_file(path="playground/static/playground/bike.jpg")
             msg.send()
 
         if 1:
