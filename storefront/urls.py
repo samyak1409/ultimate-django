@@ -29,6 +29,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("playground/", include("playground.urls")),
     path("store/", include("store.urls")),
+    path("", include("core.urls")),
     # https://djoser.readthedocs.io/en/latest/getting_started.html#configuration:
     path("auth/", include("djoser.urls")),
     # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication:

@@ -14,3 +14,9 @@ celerybeat-schedule
 
 # User uploads while development
 media/
+
+# `collectstatic`'s resultant folder (`STATIC_ROOT`)
+static/
+
+# Log file:
+logs.log

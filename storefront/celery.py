@@ -3,7 +3,7 @@ from celery import Celery
 
 
 # Set env var:
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "storefront.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "storefront.settings.dev")
 
 # Create Celery instance:
 app = Celery("storefront")

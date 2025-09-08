@@ -17,19 +17,11 @@ from celery.schedules import crontab
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-z^h%9*k325z6r@h0srqkm(0*h8dyl9$m4u-woq&vibgt&ha=wh"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -51,16 +43,12 @@ INSTALLED_APPS = [
     "likes",
     "core",
 ]
-if DEBUG:
-    INSTALLED_APPS += [
-        "debug_toolbar",  # display various debug information
-        "silk",  # live profiling and inspection tool
-    ]
 
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#setup
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # https://whitenoise.readthedocs.io/en/stable/#quickstart-for-django-apps
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -68,12 +56,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-if DEBUG:
-    # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
-    MIDDLEWARE.insert(0, "silk.middleware.SilkyMiddleware")
-    # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
-    MIDDLEWARE.insert(2, "debug_toolbar.middleware.DebugToolbarMiddleware")
-    # Order: Silk, Cors, Toolbar, ...
 
 
 INTERNAL_IPS = [
@@ -102,27 +84,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "storefront.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "ultimate_django",
-        "USER": "samyak",
-        "PASSWORD": "temporary",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -159,6 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
 # User-uploaded files:
@@ -253,4 +215,35 @@ CACHES = {
         },
         # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
     }
+}
+
+
+# Logging:
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    # [Helper] How logs would look:
+    "formatters": {
+        "main": {
+            "format": "{asctime} ({levelname}) - {name} - {message}",
+            "style": "{",
+        },
+    },
+    # [Helper] Where logs would go:
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "main"},
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "logs.log",
+            "formatter": "main",
+        },
+    },
+    # [Main] Log which apps, with which handlers, which levels:
+    "loggers": {
+        "": {  # all apps
+            "handlers": ["console", "file"],
+            "level": os.environ.get("LOG_LEVEL", "INFO"),
+        },
+    },
 }

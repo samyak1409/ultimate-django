@@ -27,6 +27,9 @@ from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from django.views import View
 from django.utils.decorators import method_decorator
+import logging
+from time import sleep
+from random import randint
 
 
 def home(request):
@@ -592,3 +595,22 @@ class TestCache3(View):
 
         response = requests.get("https://example.com")
         return HttpResponse(response.text)
+
+
+logger = logging.getLogger(name=__name__)
+
+
+def test_logging(request):
+
+    logger.info("Starting something crazy...")
+    try:
+        if randint(0, 1) == 1:  # 50% chance, to mimic error failure
+            sleep(1)  # some task
+        else:
+            raise Exception("Server is busy.")
+    except Exception as e:
+        logger.error(e)
+    else:
+        logger.info("Success.")
+
+    return HttpResponse("Check console/file.")
