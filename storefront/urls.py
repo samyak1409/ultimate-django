@@ -40,7 +40,10 @@ urlpatterns = [
 urlpatterns += debug_toolbar_urls()  # adds in DEBUG only
 
 urlpatterns += static(prefix=settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-# adds in DEBUG only
+# Adds in DEBUG only. (See code of `static`.)
+# On prod:
+# - Either use a media hosting service.
+# - Or do this same without `if DEBUG`. (Works for personal project.)
 
 if settings.DEBUG:
     # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation

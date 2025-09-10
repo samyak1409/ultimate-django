@@ -175,23 +175,7 @@ DJOSER = {
 }
 
 
-# Email:
-
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "localhost"
-EMAIL_HOST_USER = ""
-EMAIL_HOST_PASSWORD = ""
-EMAIL_PORT = 2525
-DEFAULT_FROM_EMAIL = "from@samyakstore.com"
-
-ADMINS = [
-    ("Samyak", "samyak65400@gmail.com"),
-]
-
-
 # Celery:
-
-CELERY_BROKER_URL = "redis://localhost:6379/1"
 
 CELERY_BEAT_SCHEDULE = {
     # Executes every Monday morning at 7:30 a.m.
@@ -201,20 +185,6 @@ CELERY_BEAT_SCHEDULE = {
         "args": ["Hello from beat"],
         # "kwargs": {...},
     },
-}
-
-
-# Caching:
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",  # use a DB different from Celery's redis
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-        # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
-    }
 }
 
 

@@ -45,3 +45,34 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
+
+# Email:
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 2525
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+DEFAULT_FROM_EMAIL = "from@samyakstore.com"
+
+ADMINS = [
+    ("Samyak", "samyak65400@gmail.com"),
+]
+
+
+# Celery:
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+
+
+# Caching:
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",  # using a DB different from Celery's redis
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
+    }
+}
