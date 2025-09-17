@@ -23,6 +23,7 @@ django-redis = "*"
 whitenoise = "*"
 gunicorn = "*"
 dj-database-url = "*"
+django-debug-toolbar-force = "*"
 
 [dev-packages]
 pytest = "*"

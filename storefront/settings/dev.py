@@ -19,10 +19,17 @@ INSTALLED_APPS += [
 # Middlewares only required while dev:
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-middleware
 MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+# https://github.com/barseghyanartur/django-debug-toolbar-force/?tab=readme-ov-file#installation
+MIDDLEWARE.insert(1, "debug_toolbar_force.middleware.ForceDebugToolbarMiddleware")
 # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
 MIDDLEWARE.append("silk.middleware.SilkyMiddleware")
-# Intended order: DebugToolbar, Security, Cors, WhiteNoise, 6, Silky
+# Intended order: DebugToolbar+ForceDebugTool, Security, Cors, WhiteNoise, 6, Silky
 # See Notes > Part 3 > Preparing for Production > Order of Middlewares.
+
+
+INTERNAL_IPS = [
+    "127.0.0.1",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configure-internal-ips
+]
 
 
 # Database

@@ -58,10 +58,6 @@ MIDDLEWARE = [
 ]
 
 
-INTERNAL_IPS = [
-    "127.0.0.1",  # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configure-internal-ips
-]
-
 CORS_ALLOWED_ORIGINS = ["null"]  # allow requests from local files (file://...)
 
 

@@ -38,6 +38,7 @@ class Product(models.Model):
     # e.g. "everyone-is-writing-wrong-time-complexit-6gil" in
     # https://leetcode.com/problems/partition-string/solutions/6923792/everyone-is-writing-wrong-time-complexit-6gil
     # is slug. It's made from the title, and is for search engines to find and rank our content better. It's basically a SEO technique.
+    # Read: https://g.co/gemini/share/faf64a82a49d
 
     description = models.TextField(null=True, blank=True)
 
