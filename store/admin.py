@@ -62,7 +62,7 @@ class ProductAdmin(admin.ModelAdmin):
     def inventory_status(self, product):
         return "OK" if product.inventory >= 10 else "Low"
 
-    @admin.action(description="Clear inventory for")
+    @admin.action(description="Clear inventory")
     def clear_inventory(self, request, queryset: QuerySet):
         count = queryset.update(inventory=0)
         self.message_user(
@@ -134,9 +134,5 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     autocomplete_fields = ["customer"]
     inlines = [OrderItemInline]
-    list_display = ["id", "placed_at", "customer_name"]
-    list_select_related = ["customer"]  # not using this = N+1 query problem
+    list_display = ["id", "placed_at", "customer"]
     ordering = ["id"]
-
-    def customer_name(self, order):
-        return f"{order.customer.first_name} {order.customer.last_name}"
