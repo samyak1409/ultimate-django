@@ -34,9 +34,22 @@ from random import randint
 
 def home(request):
 
-    # Lecture-wise Notes (Change 0 to 1 in `if` to get a block executed. (Didn't comment-out the code so that it's still colored and hence more readable.)):
+    # return HttpResponse("This is the home page of the playground app.")
+    return render(
+        request,
+        template_name="playground/index.html",
+        context={"heading": "Playground App"},
+    )
+
+
+def test_queries(request):
+
+    # Lecture-wise Notes (Change 0 to 1 in `if` to get a block executed.):
+    # (Didn't comment-out the code so that it's still colored and hence more readable.)
     # (Using `list`s since `QuerySet`s are lazy.)
-    # NOTE: Below examples doesn't contain all possible queries but just a basic intro. Refer to API Reference https://docs.djangoproject.com/en/5.2/ref for that.
+
+    # NOTE: Below examples doesn't contain all possible queries but just a basic intro.
+    # Refer to API Reference https://docs.djangoproject.com/en/5.2/ref for that.
 
     # Retrieving Objects:
     if 0:
@@ -73,6 +86,7 @@ def home(request):
 
         # What if we want other operators like `>`?
         list(Product.objects.filter(unit_price__gt=20))
+        # `>=`: `gte`
 
         # SQL's `BETWEEN` keyword:
         list(Product.objects.filter(unit_price__range=(20, 25)))  # inclusive
@@ -97,7 +111,7 @@ def home(request):
         # Exercises (from ORM_Filtering.pdf):
 
         # 1) Customers with .com accounts:
-        list(Customer.objects.filter(email__endswith=".com"))
+        list(Customer.objects.filter(user__email__endswith=".com"))
 
         # 2) Collections that don’t have a featured product:
         list(Collection.objects.filter(featured_product__isnull=True))
@@ -106,10 +120,12 @@ def home(request):
         list(Product.objects.filter(inventory__lt=10))
 
         # 4) Orders placed by customer with id = 1:
-        list(Order.objects.filter(customer=1))
+        list(Order.objects.filter(customer__id=1))  # but no need of field lookup
+        list(Order.objects.filter(customer=1))  # but better to be explicit and use id
+        list(Order.objects.filter(customer_id=1))  # best option
 
         # 5) Order items for products in collection 3:
-        list(OrderItem.objects.filter(product__collection=3))
+        list(OrderItem.objects.filter(product__collection_id=3))
         # `__`: nested lookup
 
     # Complex Lookups Using Q Objects:
@@ -136,9 +152,9 @@ def home(request):
         list(Product.objects.filter(inventory=F("unit_price")))
         # And, we can also use `__` to navigate to a related field's table like we did in "Filtering Objects" section above:
         list(Product.objects.filter(description=F("collection__title")))
-        # In `collection__title`, `collection` is the foreign key, `title` is a field in the Collection table.
+        # (In `collection__title`, `collection` is the foreign key, `title` is a field in the Collection table.)
 
-        # This was pretty straight-forward.
+        # This was pretty straight-forward, and useful.
 
     # Sorting:
     if 0:
@@ -160,6 +176,9 @@ def home(request):
         # We've convenience methods for this:
         Product.objects.earliest("unit_price")  # basically, ASC
         Product.objects.latest("unit_price")  # basically, DESC
+        # Though, by the naming of these, only use them on time-related fields,
+        # to keep readability high.
+        # Else, it doesn't make sense what's "earliest unit_price"?
 
     # Limiting Results:
     if 0:
@@ -167,7 +186,7 @@ def home(request):
         # `LIMIT 5`:
         list(Product.objects.all()[:5])
 
-        # `LIMIT 15 OFFSET 10` (skip 10, then give (next) 15):
+        # `LIMIT 15 OFFSET 10` (skip 10, then give next 15):
         list(Product.objects.all()[10:25])
 
     # Selecting Fields to Query:
@@ -176,10 +195,11 @@ def home(request):
         # Selecting selected columns instead of *:
         list(Product.objects.values("id", "title", "collection__title"))
         # Note that we can also use the related field using `__`, this is done using (INNER) JOIN by Django.
+        #
         # Also, as we know that `QuerySet` objects contains the actual objects/instances of the queried model class.
-        # But, above return a `ValuesQuerySet` which is basically a `QuerySet` of `dict` objects not model class objects.
+        # But here, above return a `ValuesQuerySet` which is basically a `QuerySet` of `dict` objects not model class objects.
         # Key-value pairs are field-value.
-        # e.g. vqs[0] = {'id': 2, 'title': 'Island Oasis - Raspberry', 'collection_title': 'Beauty'}
+        # E.g. vqs[0] = {'id': 2, 'title': 'Island Oasis - Raspberry', 'collection_title': 'Beauty'}
 
         list(Product.objects.values_list("id", "title", "collection__title"))
         # Same as above, this just contains `tuple` instead of `dict`.
@@ -188,6 +208,7 @@ def home(request):
         # Exercise: Select products that have been ordered and sort them by title
         ordered_product_ids = OrderItem.objects.values("product_id").distinct()
         list(Product.objects.filter(id__in=ordered_product_ids).order_by("title"))
+        # [Good exercise.]
 
     # Deferring Fields:
     if 0:
@@ -207,6 +228,12 @@ def home(request):
         list(Product.objects.defer("description"))
         # Also, same precaution to be taken here as well.
 
+        # FAQ: Is the query any different for the following two?
+        print(Product.objects.values("title")[0])  # {'title': 'Bread Ww Cluster'}
+        # SELECT "title" FROM "store_product" LIMIT 1
+        print(Product.objects.only("title")[0])  # Bread Ww Cluster
+        # SELECT "id", "title" FROM "store_product" LIMIT 1
+
     # Selecting Related Objects:
     if 0:
 
@@ -217,12 +244,12 @@ def home(request):
         # [First of all, didn't know we can do `product.collection.title`,
         # Django automatically generates this query with the help of INNER JOIN, just like it does in the case of dunder `collection__title`.]
         # What's the bug?
-        # Exactly same problem as above, it is being done n times.
+        # Exactly same problem as discussed above, n queries.
         # But, what if we actually want to access the values of related field's table's other fields.
         # There comes `select_related()` (for `OneToOneField` & `ForeignKey`):
         for product in Product.objects.select_related("collection"):  # 1 query
             print(product.title, end=" --- ")  # correct
-            print(product.collection.title)  # correct
+            print(product.collection.title)  # correct (no additional query)
         # Here, Django uses a INNER JOIN at the very start only, and selects all the fields of both tables, hence all the fields can be accessed. (Only 1 query in total.)
         # Important notes:
         # - We can use `Product.objects.select_related('collection__title')` i.e. nested lookup as well.
@@ -235,7 +262,7 @@ def home(request):
         # IMP: Read the markdown notes for this.
 
         # What if we want to access data from `OneToOneField` / `ForeignKey` and `ManyToManyField` / reverse `ForeignKey` together?
-        # We can call `select_related` & `prefetch_related` one after another (in any order since both of them return a QS):
+        # We can chain `select_related` & `prefetch_related` (in any order since both of them return a QS):
         list(
             Product.objects.select_related("collection").prefetch_related("promotions")
         )
@@ -246,9 +273,9 @@ def home(request):
             .select_related("customer")
             .prefetch_related("orderitem_set__product")
         )
-        # # (Prefetching `orderitem_set__product` prefetches `orderitem_set`.)
+        # (Prefetching `orderitem_set__product` prefetches `orderitem_set`.)
         for order in orders:
-            print(f"Order ID: {order.id}, Customer: {order.customer.first_name}")
+            print(f"Order ID: {order.id}, Customer ID: {order.customer.id}")
             for item in order.orderitem_set.all():
                 print(
                     f"- Item ID: {item.id}, Product: {item.product.title}, Quantity: {item.quantity}"
@@ -265,7 +292,7 @@ def home(request):
         print(Product.objects.aggregate(Count("id"), Min("unit_price")))
         # {'id__count': 1000, 'unit_price__min': Decimal('1.06')}
         # Returns the dict containing:
-        # - key = param name if used else arg inside the aggregate object
+        # - key = param name if used, else arg inside the aggregate object with function name
         # - value = result
         # So, we can also do if we want:
         print(Product.objects.aggregate(count=Count("id"), min_price=Min("unit_price")))
@@ -281,7 +308,11 @@ def home(request):
 
         # 2) How many units of product 1 have we sold?
         print(OrderItem.objects.filter(product=1).aggregate(Sum("quantity")))
-
+        # Or using the `filter` param:
+        # print(OrderItem.objects.aggregate(Sum("quantity", filter=Q(product_id=1))))
+        # "TypeError: Complex aggregates require an alias", so:
+        print(OrderItem.objects.aggregate(result=Sum("quantity", filter=Q(product_id=1))))
+        
         # 3) How many orders has customer 1 placed?
         print(Order.objects.filter(customer=1).aggregate(Count("id")))
         # Or just:
@@ -303,12 +334,10 @@ def home(request):
 
         list(Customer.objects.annotate(new_id=F("id") + 1))
 
-        # One important thing, check the MD notes of this section.
-
     # Calling Database Functions:
     if 0:
 
-        # Generic `Func()`:
+        # Generic `Func` class:
         list(
             Customer.objects.annotate(
                 full_name=Func(
@@ -317,7 +346,7 @@ def home(request):
             )
         )
 
-        # Dedicated class:
+        # Helper class:
         list(
             Customer.objects.annotate(
                 full_name=Concat("first_name", Value(" "), "last_name")
@@ -345,8 +374,9 @@ def home(request):
         list(Collection.objects.annotate(Count("product")))
 
         # 3) Customers with more than 5 orders:
+        # Solution: First annotate with count, then filter:
         list(Customer.objects.annotate(Count("order")).filter(order__count__gt=5))
-        # Or:
+        # Or be explicit, and give a name to the added (annotated) field using param name:
         list(
             Customer.objects.annotate(order_count=Count("order")).filter(
                 order_count__gt=5
@@ -389,6 +419,10 @@ def home(request):
         )
         list(Product.objects.annotate(discounted_price=discounted))
 
+        # We can also go the other way:
+        from decimal import Decimal
+        list(Product.objects.annotate(discounted_price=F("unit_price") * Decimal(0.9)))
+
     # Querying Generic Relationships:
     if 0:
 
@@ -408,8 +442,8 @@ def home(request):
     if 0:
 
         # (Check the code in `tags.models`.)
-        # Now, following is equivalent as above section:
-        list(TaggedItem.objects.get_for(model=Product, obj_id=1))
+        # Now, following is equivalent to above section:
+        list(TaggedItem.objects.get_for(model=Product, object_id=1))
 
     # Understanding QuerySet Cache:
     if 0:
@@ -444,8 +478,8 @@ def home(request):
             new_collection = Collection(pk=15, title="Tech")
             new_collection.save()
         # Problem with this: For all the fields which are not updated, are reset to `null` or empty str.
-        # (Some other ORMs doesn't have this problem, because they've a feature change tracking, which as the name suggests tracks
-        # which fields are changed, and only updates them.)
+        # (Some other ORMs doesn't have this problem, because they've a feature change tracking,
+        # which as the name suggests, tracks which fields are changed and only updates them.)
         # So, the correct approach is basically just getting the current data into the memory, then update:
         # (So the data we're updating would just overwrite in memory, and the other fields remain the same.)
         new_collection = Collection.objects.get(pk=15)
@@ -481,7 +515,7 @@ def home(request):
             )
         # Now, if 1st line is executed, but 2nd fails, then we would left with a order without order_item.
 
-        # To avoid that, either we decorate a function inside which all the code would be a single transaction using `@transaction.atomic`.
+        # To avoid that, either we decorate a function (using `@transaction.atomic`) inside of which all the code would be a single transaction.
         # Or, we can use `with` context manager:
         with transaction.atomic():
             order = Order.objects.create(customer_id=1)
@@ -497,7 +531,6 @@ def home(request):
         # (Simple query just for example)
         list(Product.objects.raw("SELECT * FROM store_product"))
         # returns RawQuerySet
-        # QuerySet vs. RawQuerySet: https://g.co/gemini/share/2222a9d92831
 
         # Above still have Model objects inside RawQuerySet, and the data is still mapped, i.e. can be access using `.`.
         # But, what if we don't want the data to link to the object, or we want to use store procedures,
@@ -508,9 +541,8 @@ def home(request):
             cursor.callproc("get_customers", [1, 2, 3])
         # (Always use `with` context manager so that connection is automatically closed even in the case of an Exception.)
 
-    # return HttpResponse("This is the home page of the playground app.")
-    return render(
-        request, template_name="playground/index.html", context={"heading": "Home Page"}
+    return HttpResponse(
+        "<b>See the SQL tab on Debug Toolbar.</b> (Append `/?debug-toolbar` to the url to see the Debug Toolbar. Required for pages with no body tag.)"
     )
 
 

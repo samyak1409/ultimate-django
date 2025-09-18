@@ -11,13 +11,13 @@ class Tag(models.Model):
         return self.label
 
 
+# Custom Manager to reduce repetitive code while querying:
 class TaggedItemCustomManager(models.Manager):
-    """Custom Manager to reduce repetitive code."""
 
-    def get_for(self, model: models.Model, obj_id: int):
+    def get_for(self, model: models.Model, object_id: int):
         content_type = ContentType.objects.get_for_model(model)
         return TaggedItem.objects.select_related("tag").filter(
-            content_type=content_type, object_id=obj_id
+            content_type=content_type, object_id=object_id
         )
 
 
@@ -29,7 +29,7 @@ class TaggedItem(models.Model):
     content_object = GenericForeignKey()
 
     tag = models.ForeignKey(to=Tag, on_delete=models.CASCADE)
-    # `CASCASE`: because if a tag is deleted, delete all the records where an object is tagged with tag, meaning removing that tag from all the objects
+    # `CASCADE`: because if a tag is deleted, delete all the records where an object is tagged with tag, meaning removing that tag from all the objects
 
     # Custom manager:
     objects = TaggedItemCustomManager()

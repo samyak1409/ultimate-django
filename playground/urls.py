@@ -4,7 +4,8 @@ from . import views
 
 # URLConf:
 urlpatterns = [
-    path("home/", views.home),
+    path("", views.home),
+    path("test-queries/", views.test_queries),
     path("test-mail/", views.test_mail),
     path("test-celery/", views.test_celery),
     path("test-cache1/", views.test_cache1),
