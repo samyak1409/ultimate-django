@@ -75,7 +75,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     # - To see collection id of each product:
     # collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all())
-    # - To see collection title:
+    # - To see collection's str repr (`__str__()`):
     # collection = serializers.StringRelatedField()
     #   + `select_related` in view, else N+1 query problem
     # - To see whole collection object:

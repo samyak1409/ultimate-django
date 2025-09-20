@@ -21,6 +21,7 @@ cart_router.register("items", views.CartItemViewSet, basename="cart-items")
 
 urlpatterns = [
     # path("products/", views.product_list),
+    # path("products/<int:pk>/", views.product_detail),
     # path("products/", views.ProductList.as_view()),
     # path("products/<int:pk>/", views.ProductDetail.as_view()),
     # path("collections/", views.CollectionList.as_view()),

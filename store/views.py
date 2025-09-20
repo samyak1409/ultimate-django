@@ -1,4 +1,4 @@
-# from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from rest_framework.decorators import api_view, action
@@ -43,46 +43,54 @@ from .filters import ProductFilter
 from . import permissions as custom_permissions
 
 
+# (Without DRF) Function-based View:
 # def product_list(request: HttpRequest) -> HttpResponse:
 #     return HttpResponse("OK")
 
 
 # Function-based View:
-# @api_view(["GET", "POST"])
-# def product_list(request: Request) -> Response:
+@api_view(["GET", "POST"])
+def product_list(request: Request) -> Response:
 
-#     # return Response("OK")
+    # return Response("OK")
 
-#     if request.method == "GET":
+    if request.method == "GET":
 
-#         products = Product.objects.select_related("collection")
-#         serializer = ProductSerializer(
-#             products, many=True, context={"request": request}
-#         )
-#         # print(serializer)
-#         # print(len(serializer.data))
-#         # print(type(serializer.data))  # <class 'ReturnList'>
-#         return Response(serializer.data)
+        products = Product.objects.prefetch_related("productimage_set")  # get the queryset
 
-#     else:  # if request.method == "POST":
+        serializer = ProductSerializer(
+            products, many=True, context={"request": request}
+        )  # convert queryset to list of dicts, returns a serializer obj
+        print(type(serializer.data))  # <class 'ReturnList'>
+        print(len(serializer.data))  # 1000 (when 1000 products are there)
+        print(serializer.data[0])  # {'id': 1, 'title': 'Bread Ww Cluster', ...}
 
-#         serializer = ProductSerializer(data=request.data, context={"request": request})
-#         print(request.data)
-#         # print(type(request.data))  # <class 'dict'>
-#         # print(serializer.initial_data)  # same as `request.data`
-#         # if serializer.is_valid():
-#         #     # print(serializer.validated_data)
-#         #     # print(type(serializer.validated_data))  # <class 'dict'>
-#         #     return Response("OK")
-#         # else:
-#         #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#         serializer.is_valid(raise_exception=True)
-#         print(serializer.validated_data)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data)  # `.data` gives us the list of dicts
+
+    else:  # if request.method == "POST":
+
+        print(request.data)  # the exact data json sent in the body
+        # {'title': 'YO', 'inventory': 1, 'unit_price': 1, 'collection': 1}
+        print(type(request.data))  # <class 'dict'>
+        serializer = ProductSerializer(data=request.data, context={"request": request})
+        print(serializer.initial_data)  # same as `request.data`
+
+        # if serializer.is_valid():
+        #     print(serializer.validated_data)
+        #     print(type(serializer.validated_data))  # <class 'dict'>
+        #     return Response("OK")
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        # {'title': 'YO', 'inventory': 1, 'unit_price': Decimal('1.00'), 'collection': <Collection: Test>}
+
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# Class-based View:
+# # Class-based View:
 # class ProductList(APIView):
 
 #     def get(self, request):
@@ -94,15 +102,15 @@ from . import permissions as custom_permissions
 #         return Response(serializer.data)
 
 #     def post(self, request):
-#         serializer = ProductSerializer(data=request.data, context={"request": request})
 #         print(request.data)
+#         serializer = ProductSerializer(data=request.data, context={"request": request})
 #         serializer.is_valid(raise_exception=True)
 #         print(serializer.validated_data)
 #         serializer.save()
 #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# Generic (`rest_framework.generics`) View:
+# Generic View:
 class ProductList(ListCreateAPIView):
 
     queryset = Product.objects.all()
@@ -116,55 +124,60 @@ class ProductList(ListCreateAPIView):
 
 
 # Function-based View:
-# @api_view(["GET", "PUT", "DELETE"])
-# def product_detail(request, pk: int):
+@api_view(["GET", "PUT", "DELETE"])
+def product_detail(request, pk: int):
 
-#     # return Response(pk)
+    # return Response(pk)
 
-#     # try:
-#     #     product = Product.objects.get(pk=pk)  # get the object (or queryset)
-#     # except Product.DoesNotExist:  # when product with id `pk` does not exist
-#     #     # We can just do:
-#     #     # return Response(status=404)
-#     #     # But, we should:
-#     #     return Response(status=status.HTTP_404_NOT_FOUND)
+    # try:
+    #     product = Product.objects.get(pk=pk)  # get the object
+    # except Product.DoesNotExist:  # when product with id `pk` does not exist
+    #     # We can just:
+    #     # return Response(status=404)
+    #     # But, we should:
+    #     return Response(status=status.HTTP_404_NOT_FOUND)
 
-#     # Above 4 SLOCs are same as this line:
-#     product = get_object_or_404(Product, pk=pk)
+    # Above 4 SLOCs are same as this line:
+    product = get_object_or_404(Product, pk=pk)
 
-#     if request.method == "GET":
+    if request.method == "GET":
 
-#         serializer = ProductSerializer(product, context={"request": request})
-#         # convert object (or queryset) to dict (or list of dicts), returns a serializer obj
-#         # print(serializer)
-#         # print(serializer.data)
-#         # print(type(serializer.data))  # <class 'ReturnDict'>
-#         return Response(serializer.data)  # `.data` gives us the dict (or list of dicts)
+        serializer = ProductSerializer(product, context={"request": request})
+        # convert object to dict, returns a serializer obj
+        print(serializer.data)  # {'id': 1, 'title': 'Bread Ww Cluster', ...}
+        print(type(serializer.data))  # <class 'ReturnDict'>
 
-#     elif request.method == "PUT":
+        return Response(serializer.data)  # `.data` gives us the dict
 
-#         serializer = ProductSerializer(
-#             product, data=request.data, context={"request": request}
-#         )
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data)
+    elif request.method == "PUT":
 
-#     else:  # if request.method == "DELETE":
+        serializer = ProductSerializer(
+            product, data=request.data, context={"request": request}
+        )
 
-#         # `ProtectedError`: protected foreign keys
-#         if product.orderitem_set.exists():
-#             return Response(
-#                 {
-#                     "error": "Product cannot be deleted as it is associated with an order item."
-#                 },
-#                 status=status.HTTP_409_CONFLICT,
-#             )
-#         product.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    else:  # if request.method == "DELETE":
+
+        # `ProtectedError`: protected foreign keys
+        if product.orderitem_set.exists():
+            return Response(
+                {
+                    "error": "Product cannot be deleted as it is associated with an order item."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        product.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Class-based View:
+# # Class-based View:
 # class ProductDetail(APIView):
 
 #     def get(self, request, pk):
@@ -194,7 +207,7 @@ class ProductList(ListCreateAPIView):
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Generic (`rest_framework.generics`) View:
+# Generic View:
 class ProductDetail(RetrieveUpdateDestroyAPIView):
 
     queryset = Product.objects.all()
@@ -249,26 +262,26 @@ class ProductViewSet(ModelViewSet):
 
 
 # Function-based View:
-# @api_view(["GET", "POST"])
-# def collection_list(request: Request) -> Response:
+@api_view(["GET", "POST"])
+def collection_list(request: Request) -> Response:
 
-#     if request.method == "GET":
+    if request.method == "GET":
 
-#         collections = Collection.objects.annotate(product_count=Count("product"))
-#         # Why `product` and not `product_set`?
-#         # https://github.com/samyak1409/ultimate-django/blob/main/Notes/Part%201/4.%20Django%20ORM.md#grouping-data
-#         serializer = CollectionSerializer(collections, many=True)
-#         return Response(serializer.data)
+        collections = Collection.objects.annotate(product_count=Count("product"))
+        # Why `product` and not `product_set`?
+        # https://github.com/samyak1409/ultimate-django/blob/main/Notes/Part%201/4.%20Django%20ORM.md#grouping-data
+        serializer = CollectionSerializer(collections, many=True)
+        return Response(serializer.data)
 
-#     else:  # if request.method == "POST":
+    else:  # if request.method == "POST":
 
-#         serializer = CollectionSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = CollectionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# Generic (`rest_framework.generics`) View:
+# Generic View:
 class CollectionList(ListCreateAPIView):
 
     queryset = Collection.objects.annotate(product_count=Count("product"))
@@ -276,39 +289,39 @@ class CollectionList(ListCreateAPIView):
 
 
 # Function-based View:
-# @api_view(["GET", "PUT", "DELETE"])
-# def collection_detail(request, pk: int):
+@api_view(["GET", "PUT", "DELETE"])
+def collection_detail(request, pk: int):
 
-#     collection = get_object_or_404(
-#         Collection.objects.annotate(product_count=Count("product")), pk=pk
-#     )
+    collection = get_object_or_404(
+        Collection.objects.annotate(product_count=Count("product")), pk=pk
+    )
 
-#     if request.method == "GET":
+    if request.method == "GET":
 
-#         serializer = CollectionSerializer(collection)
-#         return Response(serializer.data)
+        serializer = CollectionSerializer(collection)
+        return Response(serializer.data)
 
-#     elif request.method == "PUT":
+    elif request.method == "PUT":
 
-#         serializer = CollectionSerializer(collection, data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data)
+        serializer = CollectionSerializer(collection, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-#     else:  # if request.method == "DELETE":
+    else:  # if request.method == "DELETE":
 
-#         if collection.product_set.exists():
-#             return Response(
-#                 {
-#                     "error": "Collection cannot be deleted as it is contains one or more products."
-#                 },
-#                 status=status.HTTP_409_CONFLICT,
-#             )
-#         collection.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+        if collection.product_set.exists():
+            return Response(
+                {
+                    "error": "Collection cannot be deleted as it is contains one or more products."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Generic (`rest_framework.generics`) View:
+# Generic View:
 class CollectionDetail(RetrieveUpdateDestroyAPIView):
 
     queryset = Collection.objects.annotate(product_count=Count("product"))

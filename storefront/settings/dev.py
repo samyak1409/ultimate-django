@@ -22,7 +22,7 @@ MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 # https://github.com/barseghyanartur/django-debug-toolbar-force/?tab=readme-ov-file#installation
 MIDDLEWARE.insert(1, "debug_toolbar_force.middleware.ForceDebugToolbarMiddleware")
 # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
-MIDDLEWARE.append("silk.middleware.SilkyMiddleware")
+# MIDDLEWARE.append("silk.middleware.SilkyMiddleware")  # only enable silk while actually profiling, as it fills up the SQL panel on debug toolbar
 # Intended order: DebugToolbar+ForceDebugTool, Security, Cors, WhiteNoise, 6, Silky
 # See Notes > Part 3 > Preparing for Production > Order of Middlewares.
 
