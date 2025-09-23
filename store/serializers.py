@@ -101,8 +101,13 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     # Overriding to get the product (using product id from url), and attach (since it's a related field) to the review:
     def create(self, validated_data):
-        return Review.objects.create(
-            product_id=self.context["product_id"], **validated_data
+        # return Review.objects.create(
+        #     product_id=self.context["product_id"], **validated_data
+        # )
+        # Mosh taught above, but we should instead do following:
+        # (Read MD notes of `Advanced API Concepts > Nested Routers`.)
+        return super().create(
+            validated_data | {"product_id": self.context["product_id"]}
         )
 
 

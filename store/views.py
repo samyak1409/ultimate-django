@@ -56,7 +56,8 @@ def product_list(request: Request) -> Response:
 
     if request.method == "GET":
 
-        products = Product.objects.prefetch_related("productimage_set")  # get the queryset
+        products = Product.objects.prefetch_related("productimage_set")
+        # get the queryset
 
         serializer = ProductSerializer(
             products, many=True, context={"request": request}
@@ -90,22 +91,19 @@ def product_list(request: Request) -> Response:
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# # Class-based View:
+# Class-based View:
 # class ProductList(APIView):
 
 #     def get(self, request):
-#         products = Product.objects.all()
+#         products = Product.objects.prefetch_related("productimage_set")
 #         serializer = ProductSerializer(
 #             products, many=True, context={"request": request}
-
-#    )
+#         )
 #         return Response(serializer.data)
 
 #     def post(self, request):
-#         print(request.data)
 #         serializer = ProductSerializer(data=request.data, context={"request": request})
 #         serializer.is_valid(raise_exception=True)
-#         print(serializer.validated_data)
 #         serializer.save()
 #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -116,7 +114,7 @@ class ProductList(ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
-    # Or we can use methods instead of above if we've some more logic or anything other than just a simple expression.
+    # Or we can use methods instead of above if we've some more logic or anything other than just a simple expression:
     # def get_queryset(self):
     #     return Product.objects.all()
     # def get_serializer_class(self):
@@ -213,17 +211,23 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
-    def delete(self, request, pk):
-        product = get_object_or_404(Product, pk=pk)
-        if product.orderitem_set.exists():
+    def delete(self, request, *args, **kwargs):
+
+        # Custom logic:
+        if OrderItem.objects.filter(product_id=kwargs["pk"]).exists():
             return Response(
                 {
-                    "error": "Product cannot be deleted as it is associated with an order item."
+                    "error": "Product cannot be deleted as it is associated with one or more order items."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        product.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # Now delete:
+        # product.delete()
+        # return Response(status=status.HTTP_204_NO_CONTENT)
+        # Mosh did above but we should instead just call parent's `delete` now to delete
+        # (see the definition in `RetrieveUpdateDestroyAPIView`, `DestroyModelMixin`):
+        return super().delete(request, *args, **kwargs)
 
 
 # ViewSet:
@@ -250,15 +254,15 @@ class ProductViewSet(ModelViewSet):
 
     permission_classes = [custom_permissions.IsAdminOrReadOnly]
 
-    def destroy(self, request, *args, **kwargs):
-        if OrderItem.objects.filter(product_id=kwargs["pk"]).exists():
+    def destroy(self, request, pk):
+        if OrderItem.objects.filter(product_id=pk).exists():
             return Response(
                 {
-                    "error": "Product cannot be deleted as it is associated with an order item."
+                    "error": "Product cannot be deleted as it is associated with one or more order items."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        return super().destroy(request, *args, **kwargs)
+        return super().destroy(request, pk)
 
 
 # Function-based View:
@@ -328,16 +332,14 @@ class CollectionDetail(RetrieveUpdateDestroyAPIView):
     serializer_class = CollectionSerializer
 
     def delete(self, request, pk):
-        collection = get_object_or_404(Collection, pk=pk)
-        if collection.product_set.exists():
+        if Product.objects.filter(collection_id=pk).exists():
             return Response(
                 {
                     "error": "Collection cannot be deleted as it is contains one or more products."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        collection.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().delete(request, pk)
 
 
 # ViewSet:
@@ -348,15 +350,15 @@ class CollectionViewSet(ModelViewSet):
 
     permission_classes = [custom_permissions.IsAdminOrReadOnly]
 
-    def destroy(self, request, *args, **kwargs):
-        if Product.objects.filter(collection_id=kwargs["pk"]).exists():
+    def destroy(self, request, pk):
+        if Product.objects.filter(collection_id=pk).exists():
             return Response(
                 {
                     "error": "Collection cannot be deleted as it is contains one or more products."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        return super().destroy(request, *args, **kwargs)
+        return super().destroy(request, pk)
 
 
 class ReviewViewSet(ModelViewSet):
@@ -367,7 +369,7 @@ class ReviewViewSet(ModelViewSet):
     # Since we've the endpoint `/products/<pk>/reviews`, we want reviews to be dynamically fetched on the basis of product's pk,
     # hence we need to use method instead of attribute:
     def get_queryset(self):
-        return Review.objects.filter(product=self.kwargs["product_pk"])
+        return Review.objects.filter(product_id=self.kwargs["product_pk"])
 
     # Overriding to pass the product id from url to `ReviewSerializer.create`:
     def get_serializer_context(self):
