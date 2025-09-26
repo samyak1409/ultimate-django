@@ -401,8 +401,7 @@ class CartItemViewSet(ModelViewSet):
     # queryset = CartItem.objects.all()
     # Above would return items across all the carts!!
     # But what we instead want is, items from a single cart. Just like we did in `ReviewViewSet`.
-    # So, we need `get_queryset`.
-
+    # So, we need `get_queryset`:
     def get_queryset(self):
         return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
             "product"

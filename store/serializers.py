@@ -112,7 +112,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):
-    """Defined to show lesser `Product` fields in `CartItemSerializer` when using whole object as a field: `product = SimpleProductSerializer()`"""
+    """Defined to show lesser `Product` fields in `CartItemSerializer`, `OrderItemSerializer`, etc. when using whole object as a field: `product = SimpleProductSerializer()`"""
 
     class Meta:
         model = Product
