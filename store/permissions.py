@@ -11,13 +11,13 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 class FullDjangoModelPermissions(permissions.DjangoModelPermissions):
 
-    # Maps HTTP method to Required model permission:
-    perms_map = {
-        "GET": ["%(app_label)s.view_%(model_name)s"],
-    }
+    def __init__(self) -> None:
+        # `perms_map`: Maps HTTP method to Required model permission.
+        # Update GET's value:
+        self.perms_map["GET"] = ["%(app_label)s.view_%(model_name)s"]
 
 
 class ViewCustomerHistoryPermission(permissions.BasePermission):
-    
+
     def has_permission(self, request, view):
         return request.user.has_perm("store.view_history")
