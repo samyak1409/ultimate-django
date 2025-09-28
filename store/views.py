@@ -406,6 +406,8 @@ class CartItemViewSet(ModelViewSet):
         return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
             "product"
         )
+        # Note: Even if we don't use `product = SimpleProductSerializer()` in `CartItemSerializer`,
+        # `.select_related("product")` is still needed since we've `product.unit_price` in `CartItemSerializer.get_total_price`.
 
     # Overriding to pass the cart id from url to `CartItemSerializer.save`:
     def get_serializer_context(self):

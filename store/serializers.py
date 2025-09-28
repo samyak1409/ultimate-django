@@ -164,7 +164,7 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ["id", "cartitem_set", "total_value"]
-        read_only_fields = ["id"]
+        read_only_fields = ["id"]  # (auto id field is read-only by default by DRF, but this id is uuid field)
 
     cartitem_set = CartItemSerializer(many=True, read_only=True)
 
@@ -197,8 +197,8 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ["id", "placed_at", "payment_status", "customer", "orderitem_set"]
         read_only_fields = ["placed_at", "customer"]
-        # `read_only_fields` not working at all, neither `read_only=True` below.
-        # Read in: Notes > Part 2 > 6. Designing and Building the Orders API > Updating an Order
+        # "Updating an Order": My approach - Using read only fields (Problematic)
+        # Read: Notes > Part 2 > 6. Designing and Building the Orders API > Updating an Order
 
     orderitem_set = OrderItemSerializer(many=True, read_only=True)
 
