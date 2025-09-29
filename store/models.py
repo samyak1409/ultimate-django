@@ -75,7 +75,7 @@ class ProductImage(models.Model):
     image = models.ImageField(
         upload_to="store/images", validators=[validate_product_image_size]
     )
-    # store image in `MEDIA_ROOT/store/images/`, path in DB
+    # stores image in `MEDIA_ROOT/store/images/`, path in DB
 
     product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
     # delete image(s) if product is deleted

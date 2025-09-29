@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from tags import models as tags_models
-from store.admin import ProductAdmin, ProductImageInline
+from store.admin import ProductAdmin
 from store import models as store_models
 from .models import User
 
@@ -38,4 +38,6 @@ class TaggedItemInline(GenericTabularInline):
 
 @admin.register(store_models.Product)
 class ProductCustomAdmin(ProductAdmin):
-    inlines = [TaggedItemInline, ProductImageInline]
+    # inlines = [ProductImageInline, TaggedItemInline]
+    # See MD notes. (Uploading Files > Managing Images in the Admin)
+    inlines = list(ProductAdmin.inlines) + [TaggedItemInline]

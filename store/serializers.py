@@ -43,8 +43,12 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     # Overriding to get the product (using product id from url), and attach (since it's a related field) to the image:
     def create(self, validated_data):
-        return ProductImage.objects.create(
-            product_id=self.context["product_id"], **validated_data
+        # return ProductImage.objects.create(
+        #     product_id=self.context["product_id"], **validated_data
+        # )
+        # Just like we did in `ReviewSerializer.create`:
+        return super().create(
+            validated_data | {"product_id": self.context["product_id"]}
         )
 
 
@@ -164,7 +168,8 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ["id", "cartitem_set", "total_value"]
-        read_only_fields = ["id"]  # (auto id field is read-only by default by DRF, but this id is uuid field)
+        read_only_fields = ["id"]
+        # (auto id field is read-only by default by DRF, but this id is uuid field)
 
     cartitem_set = CartItemSerializer(many=True, read_only=True)
 
