@@ -61,7 +61,7 @@ EMAIL_HOST = "localhost"
 EMAIL_PORT = 2525
 EMAIL_HOST_USER = ""
 EMAIL_HOST_PASSWORD = ""
-DEFAULT_FROM_EMAIL = "from@samyakstore.com"
+DEFAULT_FROM_EMAIL = "general@samyakstore.com"
 
 ADMINS = [
     ("Samyak", "samyak65400@gmail.com"),

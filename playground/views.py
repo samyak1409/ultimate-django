@@ -311,8 +311,10 @@ def test_queries(request):
         # Or using the `filter` param:
         # print(OrderItem.objects.aggregate(Sum("quantity", filter=Q(product_id=1))))
         # "TypeError: Complex aggregates require an alias", so:
-        print(OrderItem.objects.aggregate(result=Sum("quantity", filter=Q(product_id=1))))
-        
+        print(
+            OrderItem.objects.aggregate(result=Sum("quantity", filter=Q(product_id=1)))
+        )
+
         # 3) How many orders has customer 1 placed?
         print(Order.objects.filter(customer=1).aggregate(Count("id")))
         # Or just:
@@ -421,6 +423,7 @@ def test_queries(request):
 
         # We can also go the other way:
         from decimal import Decimal
+
         list(Product.objects.annotate(discounted_price=F("unit_price") * Decimal(0.9)))
 
     # Querying Generic Relationships:
@@ -555,7 +558,7 @@ def test_mail(request):
                 subject="Testing `send_mail`",
                 message="Hello there!",
                 from_email=None,
-                recipient_list=["samyak65400@gmail.com"],
+                recipient_list=["customer@gmail.com"],
                 html_message="<h1>Hello there!</h1>",
             )
 
@@ -566,20 +569,22 @@ def test_mail(request):
             msg = EmailMessage(
                 subject="Testing `EmailMessage` for Attachment",
                 body="PFA",
-                to=["someone@gmail.com"],
+                to=["customer@gmail.com"],
             )
             msg.attach_file(path="playground/static/playground/bike.jpg")
             msg.send()
 
         if 1:
             BaseEmailMessage(
-                context={"name": "Samyak"}, template_name="mails/hello.html"
-            ).send(to=["someone@gmail.com"])
+                context={"name": "Samyak"}, template_name="playground/mails/hello.html"
+            ).send(to=["customer@gmail.com"])
 
     except BadHeaderError as e:
         return HttpResponse(e)
 
-    return HttpResponse("Mails sent.")
+    return HttpResponse(
+        'Mails sent. See <a href="http://localhost:3000" target="_blank">localhost:3000</a>.'
+    )
 
 
 def test_celery(request):
