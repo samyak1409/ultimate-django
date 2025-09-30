@@ -69,14 +69,14 @@ ADMINS = [
 
 
 # Celery:
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 
 
 # Caching:
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",  # using a DB different from Celery's redis
+        "LOCATION": "redis://127.0.0.1:6379/1",  # using a DB different from Celery's redis
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },

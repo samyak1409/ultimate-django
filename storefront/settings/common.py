@@ -178,7 +178,7 @@ CELERY_BEAT_SCHEDULE = {
     "notify-customers-every-monday-morning": {
         "task": "playground.tasks.notify_customers",
         "schedule": crontab(hour=7, minute=30, day_of_week=1),
-        "args": ["Hello from beat"],
+        "args": ["Triggered from celery beat"],
         # "kwargs": {...},
     },
 }

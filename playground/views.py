@@ -589,7 +589,7 @@ def test_mail(request):
 
 def test_celery(request):
 
-    notify_customers.delay(message="Hello from view")
+    notify_customers.delay(message="Triggered manually")
 
     return HttpResponse("Background task called.")
 
