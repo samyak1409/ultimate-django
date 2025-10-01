@@ -1,7 +1,7 @@
-# [The Ultimate Django Series](https://codewithmosh.com/p/the-ultimate-django-series)
+# Django E-Commerce (RESTful API)
 
-## Notes
+✅ Building the backend for a full-featured e-commerce application using Django & Django REST framework.
 
-Old: [From Corey Schafer's Django Series](https://github.com/samyak1409/django#video-wise-notes)
+✅ Designed RESTful APIs supporting CRUD operations, search, sorting, pagination, and secure authentication/authorization using JSON Web Tokens (JWT).
 
-Current: [Part 1](/Notes/Part%201) | [Part 2](/Notes/Part%202) | [Part 3](/Notes/Part%203)
+✅ Optimized application performance by implementing Redis caching, executing background jobs with Celery, and writing automated tests with pytest to ensure code quality, scalability, and industry best practices.
