@@ -1,3 +1,5 @@
+"""Global Fixtures"""
+
 from rest_framework.test import APIClient
 import pytest
 from django.contrib.auth import get_user_model

@@ -5,6 +5,8 @@ from model_bakery import baker
 
 
 # FIXTURES:
+
+
 @pytest.fixture
 def create_collection(api_client):
 
@@ -14,11 +16,16 @@ def create_collection(api_client):
     return create
 
 
+# ----------------------------------------------------------------------
+
+
 # TESTS:
+
+
 @pytest.mark.django_db
 class TestCreateCollection:
 
-    def test_if_user_is_anonymous_returns_401(self, create_collection):
+    def test_anonymous_user_returns_401(self, create_collection):
 
         # Arrange
 
@@ -28,7 +35,9 @@ class TestCreateCollection:
         # Assert
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_if_user_is_not_admin_returns_403(self, authenticate, create_collection):
+    def test_authenticated_non_admin_user_returns_403(
+        self, authenticate, create_collection
+    ):
 
         authenticate()
 
@@ -36,7 +45,9 @@ class TestCreateCollection:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_if_data_is_invalid_returns_400(self, authenticate, create_collection):
+    def test_admin_user_but_empty_title_returns_400(
+        self, authenticate, create_collection
+    ):
 
         authenticate(is_staff=True)
 
@@ -45,7 +56,9 @@ class TestCreateCollection:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "title" in response.data
 
-    def test_if_data_is_valid_returns_201(self, authenticate, create_collection):
+    def test_admin_user_and_valid_title_returns_201(
+        self, authenticate, create_collection
+    ):
 
         authenticate(is_staff=True)
 
@@ -58,7 +71,7 @@ class TestCreateCollection:
 @pytest.mark.django_db
 class TestRetrieveCollection:
 
-    def test_if_collection_does_not_exists_returns_404(self, api_client):
+    def test_non_existing_id_returns_404(self, api_client):
 
         response = api_client.get(path=f"/store/collections/1/")
         # any id would work since in the test db, no id would be present
@@ -66,7 +79,7 @@ class TestRetrieveCollection:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_if_collection_exists_returns_200(self, api_client):
+    def test_valid_id_returns_200(self, api_client):
 
         # collection = Collection.objects.create(title="X")
         # Using model-bakery:
