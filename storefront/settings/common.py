@@ -189,7 +189,7 @@ CELERY_BEAT_SCHEDULE = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    # [Helper] How logs would look:
+    # [Helper's Helper] How logs would look:
     "formatters": {
         "main": {
             "format": "{asctime} ({levelname}) - {name} - {message}",
@@ -198,14 +198,17 @@ LOGGING = {
     },
     # [Helper] Where logs would go:
     "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "main"},
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "main",
+        },
         "file": {
             "class": "logging.FileHandler",
             "filename": "logs.log",
             "formatter": "main",
         },
     },
-    # [Main] Log which apps, with which handlers, which levels:
+    # [Main] Log which apps, with which handlers & levels:
     "loggers": {
         "": {  # all apps
             "handlers": ["console", "file"],

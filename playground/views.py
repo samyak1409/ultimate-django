@@ -641,7 +641,7 @@ def test_logging(request):
 
     logger.info("Starting something crazy...")
     try:
-        if randint(0, 1) == 1:  # 50% chance, to mimic error failure
+        if randint(0, 1) == 1:  # 50% chance, mimic exception
             sleep(1)  # some task
         else:
             raise Exception("Server is busy.")

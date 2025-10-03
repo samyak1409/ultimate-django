@@ -16,7 +16,7 @@ class AutomatedUser(HttpUser):
         collection_id = randint(1, 10)
         self.client.get(
             url=f"/store/products/?collection_id={collection_id}",
-            name="store/products",
+            name="store/products/?collection_id",
         )
 
     @task(weight=4)
