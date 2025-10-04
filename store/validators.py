@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 
 
-MAX_PRODUCT_IMAGE_SIZE_KB = 1024
+MAX_PRODUCT_IMAGE_SIZE_KB = 1024  # 1 MB
 
 
 def validate_product_image_size(image):
