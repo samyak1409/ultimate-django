@@ -75,7 +75,7 @@ class ProductSerializer(serializers.ModelSerializer):
     price_plus_tax = serializers.SerializerMethodField(method_name="get_price_plus_tax")
 
     def get_price_plus_tax(self, product: Product):
-        return round(product.unit_price * Decimal(1.1), 2)
+        return round(product.unit_price * Decimal('1.1'), 2)
 
     # - To see collection id of each product:
     # collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all())
@@ -217,6 +217,7 @@ class CreateOrderSerializer(serializers.Serializer):
             raise serializers.ValidationError("No cart with given cart id.")
         if not CartItem.objects.filter(cart_id=cart_id).exists():
             raise serializers.ValidationError("Cart is empty.")
+        # Why add `exists`: https://docs.djangoproject.com/en/6.0/ref/models/querysets/#exists
         return cart_id
 
     def save(self, **kwargs):

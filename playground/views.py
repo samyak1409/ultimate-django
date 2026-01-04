@@ -52,18 +52,18 @@ def test_queries(request):
     # Refer to API Reference https://docs.djangoproject.com/en/5.2/ref for that.
 
     # Retrieving Objects:
-    if 0:
+    if 1:
 
         list(Product.objects.all())
-        # returns queryset of all the objects
-        # Note: `QuerySet` objects contains the actual objects/instances of the queried model class.
-        # Access to the data is done using `object.attr` syntax. E.g. `product.title` (`product` is `Product`'s instance var / object)
+        # returns queryset containing all the objects
+        # Note: `QuerySet` contains the actual objects/instances of the queried model class.
+        # Access to the data is done using `object.attr` syntax. E.g. `product.title` (`product` is instance/object of `Product` model class)
 
         Product.objects.get(pk=1)
-        # returns single object
+        # returns single object (given we're using pk)
 
         # Product.objects.get(pk=0)
-        # if object does not exist, raise `DoesNotExist` exception
+        # if object does not exist, raises exception
 
         # So one solution is:
         try:
@@ -152,7 +152,7 @@ def test_queries(request):
         list(Product.objects.filter(inventory=F("unit_price")))
         # And, we can also use `__` to navigate to a related field's table like we did in "Filtering Objects" section above:
         list(Product.objects.filter(description=F("collection__title")))
-        # (In `collection__title`, `collection` is the foreign key, `title` is a field in the Collection table.)
+        # (`collection__title`: `collection` is foreign key, `title` is a field in `Collection` table)
 
         # This was pretty straight-forward, and useful.
 
@@ -173,6 +173,7 @@ def test_queries(request):
 
         # Getting the first/last / min/max / top:
         Product.objects.order_by("-unit_price")[0]
+        # (`[0]`: translates to `LIMIT 1`)
         # We've convenience methods for this:
         Product.objects.earliest("unit_price")  # basically, ASC
         Product.objects.latest("unit_price")  # basically, DESC
@@ -192,9 +193,9 @@ def test_queries(request):
     # Selecting Fields to Query:
     if 0:
 
-        # Selecting selected columns instead of *:
+        # Selecting specific columns instead of *:
         list(Product.objects.values("id", "title", "collection__title"))
-        # Note that we can also use the related field using `__`, this is done using (INNER) JOIN by Django.
+        # Note that we can also use the related field using nested lookup `__`, this is done using (INNER) JOIN by Django.
         #
         # Also, as we know that `QuerySet` objects contains the actual objects/instances of the queried model class.
         # But here, above return a `ValuesQuerySet` which is basically a `QuerySet` of `dict` objects not model class objects.
@@ -228,10 +229,10 @@ def test_queries(request):
         list(Product.objects.defer("description"))
         # Also, same precaution to be taken here as well.
 
-        # FAQ: Is the query any different for the following two?
+        # FAQ: Is the sql level query any different for the following two?
         print(Product.objects.values("title")[0])  # {'title': 'Bread Ww Cluster'}
         # SELECT "title" FROM "store_product" LIMIT 1
-        print(Product.objects.only("title")[0])  # Bread Ww Cluster
+        print(Product.objects.only("title")[0])  # Bread Ww Cluster (this is __str__)
         # SELECT "id", "title" FROM "store_product" LIMIT 1
 
     # Selecting Related Objects:
@@ -284,9 +285,9 @@ def test_queries(request):
     # Aggregating Objects:
     if 0:
 
-        print(Product.objects.aggregate(Count("id")))
+        print(Product.objects.aggregate(Count("id")))  # {'id__count': 1000}
         # Why do we need this when we can use:
-        print(Product.objects.count())
+        print(Product.objects.count())  # 1000
         # Because `Count()` can be used to count on any field, `count()` counts all the records.
         # Also, multiple aggregates can be passed:
         print(Product.objects.aggregate(Count("id"), Min("unit_price")))
@@ -343,7 +344,7 @@ def test_queries(request):
         list(
             Customer.objects.annotate(
                 full_name=Func(
-                    F("first_name"), Value(" "), F("last_name"), function="CONCAT"
+                    F("user__first_name"), Value(" "), F("user__last_name"), function="CONCAT"
                 )
             )
         )
@@ -351,7 +352,7 @@ def test_queries(request):
         # Helper class:
         list(
             Customer.objects.annotate(
-                full_name=Concat("first_name", Value(" "), "last_name")
+                full_name=Concat("user__first_name", Value(" "), "user__last_name")
             )
         )
 
@@ -424,7 +425,11 @@ def test_queries(request):
         # We can also go the other way:
         from decimal import Decimal
 
-        list(Product.objects.annotate(discounted_price=F("unit_price") * Decimal(0.9)))
+        list(Product.objects.annotate(discounted_price=F("unit_price") * Decimal('0.9')))
+        # IMP:
+        # `Decimal(0.9)` - wrong
+        # `Decimal('0.9')` - correct
+        # Read MD notes.
 
     # Querying Generic Relationships:
     if 0:
@@ -432,7 +437,7 @@ def test_queries(request):
         # Since the liked item can belong to any model:
         content_type = ContentType.objects.get_for_model(Product)
 
-        # Now, getting all the tags product with id 1 is tagged with:
+        # Now, getting all the tags that product with id 1 is tagged with:
         list(
             TaggedItem.objects.select_related("tag").filter(
                 content_type=content_type, object_id=1
@@ -490,7 +495,7 @@ def test_queries(request):
         new_collection.save()
 
         # But that looks like a lot of code for a simple update, that's why we've a convenience method here as well just like `create()`:
-        # Note that first we need to `filter` (`get` won't work since `update` is not a `models.Model` method, it's a `QuerySet` method), and then update:
+        # Note that first we need to `filter` (`get` won't work since `update` is a `QuerySet` method, not a `models.Model` method), and then update:
         # Hence, also note that it can be used to update multiple records in one go, all the objects which are there in returned QuerySet.
         print(
             "Rows affected:",
@@ -534,6 +539,10 @@ def test_queries(request):
         # (Simple query just for example)
         list(Product.objects.raw("SELECT * FROM store_product"))
         # returns RawQuerySet
+
+        # from django.db.models import Model
+        # list(Model.objects.raw("SELECT * FROM store_product"))
+        # AttributeError: type object 'Model' has no attribute 'objects'
 
         # Above still have Model objects inside RawQuerySet, and the data is still mapped, i.e. can be access using `.`.
         # But, what if we don't want the data to link to the object, or we want to use store procedures,
@@ -589,9 +598,12 @@ def test_mail(request):
 
 def test_celery(request):
 
-    notify_customers.delay(message="Triggered manually")
+    task_id = notify_customers.delay(message="Triggered manually")
 
-    return HttpResponse("Background task called.")
+    return HttpResponse(f"Background task called. (`task_id`: {task_id})")
+
+    # Background Task Completion Notifications: https://g.co/gemini/share/31129a01df45
+    # Notify user on task completion: https://chatgpt.com/share/68ec7f3e-a618-800a-994f-37da844ecbf5
 
 
 # Caching manually:

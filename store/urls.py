@@ -5,19 +5,21 @@ from . import views
 
 
 router = DefaultRouter()
-router.register(prefix="products", viewset=views.ProductViewSet, basename="products")
+router.register(prefix="products", viewset=views.ProductViewSet, basename="product")
+# `basename`: used for creating unique url names: "product-list", "product-detail"
+# Read here: https://www.django-rest-framework.org/api-guide/routers/#usage
 router.register(prefix="collections", viewset=views.CollectionViewSet)
 router.register(prefix="carts", viewset=views.CartViewSet)
 router.register(prefix="customers", viewset=views.CustomerViewSet)
-router.register(prefix="orders", viewset=views.OrderViewSet, basename="orders")
+router.register(prefix="orders", viewset=views.OrderViewSet, basename="order")
 # print(router.urls)  # <class 'list'>
 
 product_router = NestedDefaultRouter(router, "products", lookup="product")
-product_router.register("reviews", views.ReviewViewSet, basename="product-reviews")
-product_router.register("images", views.ProductImageViewSet, basename="product-images")
+product_router.register("reviews", views.ReviewViewSet, basename="product-review")
+product_router.register("images", views.ProductImageViewSet, basename="product-image")
 
 cart_router = NestedDefaultRouter(router, "carts", lookup="cart")
-cart_router.register("items", views.CartItemViewSet, basename="cart-items")
+cart_router.register("items", views.CartItemViewSet, basename="cart-item")
 
 urlpatterns = [
     # path("products/", views.product_list),

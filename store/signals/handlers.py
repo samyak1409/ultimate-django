@@ -5,6 +5,6 @@ from ..models import Customer
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_customer_for_new_user(sender, **kwargs):
-    if kwargs["created"]:
-        Customer.objects.create(user_id=kwargs["instance"].id)
+def create_customer_for_new_user(sender, created, instance, **kwargs):
+    if created:
+        Customer.objects.create(user_id=instance.id)

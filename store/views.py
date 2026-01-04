@@ -150,7 +150,7 @@ def product_detail(request, pk: int):
     elif request.method == "PUT":
 
         serializer = ProductSerializer(
-            product, data=request.data, context={"request": request}
+            instance=product, data=request.data, context={"request": request}
         )
 
         serializer.is_valid(raise_exception=True)
@@ -186,7 +186,7 @@ def product_detail(request, pk: int):
 #     def put(self, request, pk):
 #         product = get_object_or_404(Product, pk=pk)
 #         serializer = ProductSerializer(
-#             product, data=request.data, context={"request": request}
+#             instance=product, data=request.data, context={"request": request}
 #         )
 #         serializer.is_valid(raise_exception=True)
 #         serializer.save()
@@ -236,7 +236,7 @@ class ProductViewSet(ModelViewSet):
     queryset = Product.objects.prefetch_related("productimage_set")
     serializer_class = ProductSerializer
 
-    # For applying filtering functionality:
+    # For applying filtering functionality (manually):
     # https://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
     # def get_queryset(self):
     #     collection_id = self.request.query_params.get("collection_id")
