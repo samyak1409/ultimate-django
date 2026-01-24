@@ -1,6 +1,6 @@
 # Django E-Commerce (RESTful API)
 
-✅ Building the backend for a full-featured e-commerce application using Django & Django REST framework.
+✅ Built the backend for a full-featured e-commerce application using Django & Django REST framework.
 
 ✅ Designed RESTful APIs supporting CRUD operations, search, sorting, pagination, and secure authentication/authorization using JSON Web Tokens (JWT).
 
