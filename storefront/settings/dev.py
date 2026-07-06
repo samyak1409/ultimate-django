@@ -79,6 +79,7 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379/1",  # using a DB different from Celery's redis
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,  # treat Redis being down as a cache miss instead of a 500
         },
         # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
     }

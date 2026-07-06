@@ -427,7 +427,9 @@ class CustomerViewSet(ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request: Request):
-        customer = Customer.objects.get(user_id=request.user.id)
+        # `get_or_create` instead of `get`: users created before the post_save signal
+        # existed have no `Customer` row, and a plain `get` would 500 for them
+        customer, _ = Customer.objects.get_or_create(user_id=request.user.id)
         if request.method == "GET":
             serializer = CustomerSerializer(customer)
         elif request.method == "PUT":
@@ -473,7 +475,7 @@ class OrderViewSet(ModelViewSet):
         order = input_sr.save()
 
         output_sr = OrderSerializer(order)
-        return Response(output_sr.data)
+        return Response(output_sr.data, status=status.HTTP_201_CREATED)
 
     def get_permissions(self):
         if self.request.method in ["PATCH", "DELETE"]:

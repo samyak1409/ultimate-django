@@ -45,7 +45,12 @@ CACHES = {
         "LOCATION": REDIS_URL,  # using same DB as Celery's redis
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,  # treat Redis being down as a cache miss instead of a 500
         },
         # "TIMEOUT": 600,  # override the default cache deletion time which is 300s
     }
 }
+
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
+# `IGNORE_EXCEPTIONS` keeps the site up when Redis is down, but silently — log the
+# ignored errors so a prod Redis outage is visible in logs instead of just slow pages
