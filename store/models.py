@@ -111,7 +111,9 @@ class Customer(models.Model):
     # creation) and fill their profile later via `/customers/me`, so an empty phone
     # must be valid — else admin/serializer validation rejects rows we create ourselves
 
-    birth_date = models.DateField(null=True)
+    birth_date = models.DateField(null=True, blank=True)
+    # `blank=True` for the same reason as `phone` above — without it the admin
+    # change form refuses to save a customer with no birth date
 
     membership = models.CharField(
         max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_CHOICES[0][0]

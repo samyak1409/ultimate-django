@@ -317,7 +317,7 @@ def collection_detail(request, pk: int):
         if collection.product_set.exists():
             return Response(
                 {
-                    "error": "Collection cannot be deleted as it is contains one or more products."
+                    "error": "Collection cannot be deleted as it contains one or more products."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
@@ -335,7 +335,7 @@ class CollectionDetail(RetrieveUpdateDestroyAPIView):
         if Product.objects.filter(collection_id=pk).exists():
             return Response(
                 {
-                    "error": "Collection cannot be deleted as it is contains one or more products."
+                    "error": "Collection cannot be deleted as it contains one or more products."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
@@ -354,7 +354,7 @@ class CollectionViewSet(ModelViewSet):
         if Product.objects.filter(collection_id=pk).exists():
             return Response(
                 {
-                    "error": "Collection cannot be deleted as it is contains one or more products."
+                    "error": "Collection cannot be deleted as it contains one or more products."
                 },
                 status=status.HTTP_409_CONFLICT,
             )
@@ -365,6 +365,10 @@ class ReviewViewSet(ModelViewSet):
 
     # queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+
+    # Reads are public, posting needs auth, and edits/deletes are author/staff-only
+    # (the author is also set from the authenticated user — see `ReviewSerializer`):
+    permission_classes = [custom_permissions.IsReviewAuthorOrReadOnly]
 
     # Since we've the endpoint `/products/<pk>/reviews`, we want reviews to be dynamically fetched on the basis of product's pk,
     # hence we need to use method instead of attribute:

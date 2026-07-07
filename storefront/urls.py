@@ -17,7 +17,6 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -36,9 +35,6 @@ urlpatterns = [
     path("auth/", include("djoser.urls.jwt")),
 ]
 
-# https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-urls:
-urlpatterns += debug_toolbar_urls()  # adds in DEBUG only
-
 urlpatterns += static(prefix=settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # Adds in DEBUG only. (See code of `static`.)
 # On prod:
@@ -46,5 +42,11 @@ urlpatterns += static(prefix=settings.MEDIA_URL, document_root=settings.MEDIA_RO
 # - Or do this same without `if DEBUG`. (Works for personal project.)
 
 if settings.DEBUG:
+    # Importing the dev-only tools inside the `if` so prod doesn't need
+    # debug-toolbar/silk installed just to load the URLconf:
+    # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#add-the-urls:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns += debug_toolbar_urls()
     # https://github.com/jazzband/django-silk?tab=readme-ov-file#installation
     urlpatterns.append(path("silk/", include("silk.urls", namespace="silk")))

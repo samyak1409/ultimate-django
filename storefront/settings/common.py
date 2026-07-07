@@ -203,8 +203,11 @@ LOGGING = {
             "formatter": "main",
         },
         "file": {
-            "class": "logging.FileHandler",
+            # Rotating instead of plain `FileHandler` so the log can't grow unbounded:
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": "logs.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5 MB
+            "backupCount": 2,  # keep logs.log.1, logs.log.2
             "formatter": "main",
         },
     },

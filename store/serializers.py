@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.db import transaction
+from django.db.models import F
 from rest_framework import serializers
 from .models import (
     Product,
@@ -102,6 +103,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         exclude = ["product"]
+        read_only_fields = ["customer"]
+        # `customer` comes from the authenticated user (below), not the request
+        # body — else anyone could post reviews as any customer.
 
     # Overriding to get the product (using product id from url), and attach (since it's a related field) to the review:
     def create(self, validated_data):
@@ -110,8 +114,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         # )
         # Mosh taught above, but we should instead do following:
         # (Read MD notes of `Advanced API Concepts > Nested Routers`.)
+        # `get_or_create` for the same reason as in `CustomerViewSet.me`:
+        customer, _ = Customer.objects.get_or_create(
+            user_id=self.context["request"].user.id
+        )
         return super().create(
-            validated_data | {"product_id": self.context["product_id"]}
+            validated_data
+            | {"product_id": self.context["product_id"], "customer": customer}
         )
 
 
@@ -146,20 +155,25 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         cart_id = self.context["cart_id"]
-        try:
-            # 1. Attempt to get the existing item
-            item = CartItem.objects.get(
-                cart_id=cart_id, product=self.validated_data["product"]
-            )
-            # 2. If it exists, MANUALLY update its fields and save it
-            item.quantity += self.validated_data["quantity"]
-            item.save()
-            self.instance = item  # Set self.instance to the updated object
-        except CartItem.DoesNotExist:
-            # 3. If it doesn't exist, let the default behavior create a new one
-            self.instance = CartItem.objects.create(
-                cart_id=cart_id, **self.validated_data
-            )
+        quantity = self.validated_data["quantity"]
+
+        # `get_or_create` instead of get → except `DoesNotExist` → create:
+        # two concurrent adds of the same product would both take the create path,
+        # and the loser would 500 on the `unique_together` constraint —
+        # `get_or_create` resolves that race internally (retries the get):
+        self.instance, created = CartItem.objects.get_or_create(
+            cart_id=cart_id,
+            product=self.validated_data["product"],
+            defaults={"quantity": quantity},
+        )
+        if not created:
+            # `F()` increments in the DB, so two concurrent adds can't read the
+            # same old quantity and lose one of the updates:
+            self.instance.quantity = F("quantity") + quantity
+            self.instance.save(update_fields=["quantity"])
+            # Refresh, else `quantity` stays an unserializable SQL expression
+            # (`CombinedExpression`) instead of the resulting number:
+            self.instance.refresh_from_db(fields=["quantity"])
 
         return self.instance
 
@@ -230,7 +244,16 @@ class CreateOrderSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
 
+        cart_id = self.validated_data["cart_id"]
+
         with transaction.atomic():
+            # Lock the cart row (`select_for_update`) so a double-submit of the same
+            # cart can't create two orders: the second request blocks here until the
+            # first commits (which deletes the cart), then sees no cart and 400s
+            # instead of silently duplicating the order:
+            if not Cart.objects.select_for_update().filter(pk=cart_id).exists():
+                raise serializers.ValidationError("No cart with given cart id.")
+
             # Create order:
             # `get_or_create` for the same reason as in `CustomerViewSet.me`:
             customer, _ = Customer.objects.only("id").get_or_create(
@@ -239,7 +262,6 @@ class CreateOrderSerializer(serializers.Serializer):
             order = Order.objects.create(customer_id=customer.id)
 
             # Create order items:
-            cart_id = self.validated_data["cart_id"]
             cart_items = CartItem.objects.select_related("product").filter(
                 cart_id=cart_id
             )
@@ -255,7 +277,9 @@ class CreateOrderSerializer(serializers.Serializer):
             OrderItem.objects.bulk_create(order_items)
 
             # Delete cart:
-            Cart.objects.get(id=cart_id).delete()
+            Cart.objects.filter(pk=cart_id).delete()
+            # (`filter` not `get`: one less query, and no `DoesNotExist` → 500 if
+            # the cart is already gone)
 
             # Custom signal:
             order_created.send_robust(sender=self.__class__, order=order)

@@ -25,3 +25,13 @@ class ViewCustomerHistoryPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.has_perm("store.view_history")
+
+
+class IsReviewAuthorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
+    """Anyone can read reviews, any authenticated user can post one,
+    but only the review's author (or staff) can edit/delete it."""
+
+    def has_object_permission(self, request, view, review):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_staff or review.customer.user_id == request.user.id
