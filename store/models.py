@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -43,8 +44,10 @@ class Product(models.Model):
     description = models.TextField(null=True, blank=True)
 
     unit_price = models.DecimalField(
-        max_digits=6, decimal_places=2, validators=[MinValueValidator(0.01)]
+        max_digits=6, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
     )
+    # `Decimal("0.01")` not float `0.01`: DRF warns on a float `min_value` for a
+    # `DecimalField`, and float can't represent 0.01 exactly
     # `FloatField` has rounding errors, and sensitive fields like `price` should be very accurate
     # and max price = 9999.99, digit counting concept is same as that in sql
 
@@ -80,6 +83,9 @@ class ProductImage(models.Model):
     product = models.ForeignKey(to=Product, on_delete=models.CASCADE)
     # delete image(s) if product is deleted
 
+    class Meta:
+        ordering = ["id"]  # for consistent pagination
+
 
 class Customer(models.Model):
 
@@ -100,7 +106,10 @@ class Customer(models.Model):
     # last_name = models.CharField(max_length=255)
     # email = models.EmailField(unique=True)
 
-    phone = models.CharField(max_length=255)
+    phone = models.CharField(max_length=255, blank=True)
+    # `blank=True`: customers are auto-created empty (post_save signal on user
+    # creation) and fill their profile later via `/customers/me`, so an empty phone
+    # must be valid — else admin/serializer validation rejects rows we create ourselves
 
     birth_date = models.DateField(null=True)
 
@@ -112,6 +121,7 @@ class Customer(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
 
     class Meta:
+        ordering = ["id"]  # for consistent pagination
         permissions = [
             ("view_history", "Can view history"),
         ]
@@ -135,6 +145,7 @@ class Order(models.Model):
     # Mosh is using `on_delete=models.PROTECT` to protect deleting of the orders if a customer is deleted, but, that stops us from deleting a customer!!
 
     class Meta:
+        ordering = ["id"]  # for consistent pagination
         permissions = [
             ("cancel_order", "Can cancel order"),
         ]
@@ -192,6 +203,7 @@ class CartItem(models.Model):
     quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
 
     class Meta:
+        ordering = ["id"]  # for consistent pagination
         # Enforce Unique Product per Cart / Prevent duplicate cart items for same product:
         unique_together = [["cart", "product"]]
 
@@ -207,3 +219,6 @@ class Review(models.Model):
     customer = models.ForeignKey(to=Customer, on_delete=models.CASCADE)
 
     # Keeping the fields different from mosh, his looks bad to me. Check the video "Building the Reviews API" for his fields.
+
+    class Meta:
+        ordering = ["id"]  # for consistent pagination

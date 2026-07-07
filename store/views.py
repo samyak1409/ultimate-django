@@ -373,7 +373,11 @@ class ReviewViewSet(ModelViewSet):
 
     # Overriding to pass the product id from url to `ReviewSerializer.create`:
     def get_serializer_context(self):
-        return {"product_id": self.kwargs["product_pk"]}
+        # (Merging into `super()`'s context instead of replacing it, else DRF's
+        # default context (`request`, `view`, `format`) gets dropped.)
+        return super().get_serializer_context() | {
+            "product_id": self.kwargs["product_pk"]
+        }
 
 
 class CartViewSet(
@@ -411,7 +415,7 @@ class CartItemViewSet(ModelViewSet):
 
     # Overriding to pass the cart id from url to `CartItemSerializer.save`:
     def get_serializer_context(self):
-        return {"cart_id": self.kwargs["cart_pk"]}
+        return super().get_serializer_context() | {"cart_id": self.kwargs["cart_pk"]}
 
 
 class CustomerViewSet(ModelViewSet):
@@ -427,8 +431,9 @@ class CustomerViewSet(ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request: Request):
-        # `get_or_create` instead of `get`: users created before the post_save signal
-        # existed have no `Customer` row, and a plain `get` would 500 for them
+        # `get_or_create` instead of `get`: defensive — the signal + backfill migration
+        # (0020) guarantee a `Customer` row for normal flows, but not for users created
+        # via paths that skip post_save signals (e.g. `bulk_create`, raw SQL)
         customer, _ = Customer.objects.get_or_create(user_id=request.user.id)
         if request.method == "GET":
             serializer = CustomerSerializer(customer)
@@ -461,8 +466,10 @@ class OrderViewSet(ModelViewSet):
         if user.is_staff:
             return Order.objects.prefetch_related("orderitem_set__product")
 
-        customer = Customer.objects.only("id").get(user_id=user.id)
-        return Order.objects.filter(customer_id=customer.id).prefetch_related(
+        # Filtering through the relation instead of fetching the `Customer` first:
+        # one query instead of two, and no crash / no write side-effect for a user
+        # without a `Customer` row (they simply have no orders):
+        return Order.objects.filter(customer__user_id=user.id).prefetch_related(
             "orderitem_set__product"
         )
 
@@ -496,4 +503,8 @@ class ProductImageViewSet(ModelViewSet):
 
     # Overriding to pass the product id from url to `ProductImageSerializer.create`:
     def get_serializer_context(self):
-        return {"product_id": self.kwargs["product_pk"]}
+        # `request` from `super()`'s context is needed here for the `image` urls to be
+        # absolute (like they're when nested in `ProductSerializer`), not relative:
+        return super().get_serializer_context() | {
+            "product_id": self.kwargs["product_pk"]
+        }

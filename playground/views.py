@@ -620,12 +620,16 @@ def test_cache1(request):
     """
 
     # Cached:
-    if cache.get(key := "random_data") is None:
+    data = cache.get(key := "random_data")
+    if data is None:
         response = requests.get("https://example.com")
         data = response.text
         cache.set(key, data)
+    # (Returning `data` directly instead of `cache.get(key)` again: avoids a second
+    # round-trip to Redis, and still returns the page (instead of a blank response)
+    # when Redis is down and `cache.set` is silently ignored (`IGNORE_EXCEPTIONS`).)
 
-    return HttpResponse(cache.get(key))
+    return HttpResponse(data)
 
 
 # Caching using decorator:

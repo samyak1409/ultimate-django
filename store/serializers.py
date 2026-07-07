@@ -136,6 +136,14 @@ class CartItemSerializer(serializers.ModelSerializer):
     def get_total_price(self, item: CartItem):
         return item.product.unit_price * item.quantity
 
+    def validate(self, data):
+        # The cart is deleted when an order is placed (`CreateOrderSerializer.save`),
+        # so a client re-using a stale cart id would otherwise hit an
+        # `IntegrityError` (500) on create below:
+        if not Cart.objects.filter(id=self.context["cart_id"]).exists():
+            raise serializers.ValidationError("No cart with the given ID was found.")
+        return data
+
     def save(self, **kwargs):
         cart_id = self.context["cart_id"]
         try:
@@ -224,7 +232,10 @@ class CreateOrderSerializer(serializers.Serializer):
 
         with transaction.atomic():
             # Create order:
-            customer = Customer.objects.only("id").get(user_id=self.context["user_id"])
+            # `get_or_create` for the same reason as in `CustomerViewSet.me`:
+            customer, _ = Customer.objects.only("id").get_or_create(
+                user_id=self.context["user_id"]
+            )
             order = Order.objects.create(customer_id=customer.id)
 
             # Create order items:
