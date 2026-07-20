@@ -157,23 +157,34 @@ class CartItemSerializer(serializers.ModelSerializer):
         cart_id = self.context["cart_id"]
         quantity = self.validated_data["quantity"]
 
-        # `get_or_create` instead of get → except `DoesNotExist` → create:
-        # two concurrent adds of the same product would both take the create path,
-        # and the loser would 500 on the `unique_together` constraint —
-        # `get_or_create` resolves that race internally (retries the get):
-        self.instance, created = CartItem.objects.get_or_create(
-            cart_id=cart_id,
-            product=self.validated_data["product"],
-            defaults={"quantity": quantity},
-        )
-        if not created:
-            # `F()` increments in the DB, so two concurrent adds can't read the
-            # same old quantity and lose one of the updates:
-            self.instance.quantity = F("quantity") + quantity
-            self.instance.save(update_fields=["quantity"])
-            # Refresh, else `quantity` stays an unserializable SQL expression
-            # (`CombinedExpression`) instead of the resulting number:
-            self.instance.refresh_from_db(fields=["quantity"])
+        with transaction.atomic():
+            # Re-check the cart under a lock (`validate` above already checked, but
+            # without one): checkout (`CreateOrderSerializer.save`) locks this same
+            # cart row before consuming the cart, so an add racing a checkout waits
+            # here and then 400s when the cart is gone, instead of 500ing on the
+            # cart FK (`IntegrityError`):
+            if not Cart.objects.select_for_update().filter(pk=cart_id).exists():
+                raise serializers.ValidationError(
+                    "No cart with the given ID was found."
+                )
+
+            # `get_or_create` instead of get → except `DoesNotExist` → create:
+            # two concurrent adds of the same product would both take the create path,
+            # and the loser would 500 on the `unique_together` constraint —
+            # `get_or_create` resolves that race internally (retries the get):
+            self.instance, created = CartItem.objects.get_or_create(
+                cart_id=cart_id,
+                product=self.validated_data["product"],
+                defaults={"quantity": quantity},
+            )
+            if not created:
+                # `F()` increments in the DB, so two concurrent adds can't read the
+                # same old quantity and lose one of the updates:
+                self.instance.quantity = F("quantity") + quantity
+                self.instance.save(update_fields=["quantity"])
+                # Refresh, else `quantity` stays an unserializable SQL expression
+                # (`CombinedExpression`) instead of the resulting number:
+                self.instance.refresh_from_db(fields=["quantity"])
 
         return self.instance
 
@@ -207,6 +218,16 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ["id", "phone", "birth_date", "membership"]
+
+
+class CurrentCustomerSerializer(CustomerSerializer):
+    """For `/customers/me`: same fields, but `membership` is read-only — it's a
+    store-assigned tier, so a customer editing their own profile must not be able
+    to upgrade themselves to Gold. Admins still set it via `/customers/<id>/`
+    (`CustomerSerializer` above, gated by model permissions)."""
+
+    class Meta(CustomerSerializer.Meta):
+        read_only_fields = ["membership"]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

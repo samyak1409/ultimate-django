@@ -1,8 +1,10 @@
 import pytest
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from model_bakery import baker
 from store.models import Product, Cart, CartItem, Order
+from store.serializers import CartItemSerializer
 
 
 User = get_user_model()
@@ -68,6 +70,25 @@ class TestAddCartItem:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_cart_deleted_between_validate_and_save_raises_400(self, cart, product):
+        """Deterministic replay of the add-item vs. checkout race: the cart passes
+        validation, then checkout consumes (deletes) it before `save` runs. The
+        locked re-check in `save` must turn that into a 400 `ValidationError`,
+        not a 500 (`IntegrityError` on the cart FK)."""
+
+        # (Driving the serializer directly — an API call can't pause between
+        # validation and save.)
+        serializer = CartItemSerializer(
+            data={"product": product.id, "quantity": 1},
+            context={"cart_id": cart.id},
+        )
+        assert serializer.is_valid()
+
+        cart.delete()  # what `CreateOrderSerializer.save` does, mid-race
+
+        with pytest.raises(ValidationError):
+            serializer.save()
 
 
 @pytest.mark.django_db

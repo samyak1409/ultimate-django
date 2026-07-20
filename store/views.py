@@ -34,6 +34,7 @@ from .serializers import (
     CartItemSerializer,
     UpdateCartItemSerializer,
     CustomerSerializer,
+    CurrentCustomerSerializer,
     OrderSerializer,
     CreateOrderSerializer,
     UpdateOrderSerializer,
@@ -439,10 +440,12 @@ class CustomerViewSet(ModelViewSet):
         # (0020) guarantee a `Customer` row for normal flows, but not for users created
         # via paths that skip post_save signals (e.g. `bulk_create`, raw SQL)
         customer, _ = Customer.objects.get_or_create(user_id=request.user.id)
+        # `CurrentCustomerSerializer` (not `CustomerSerializer`): `membership` is
+        # read-only here so users can't self-upgrade their tier via this endpoint:
         if request.method == "GET":
-            serializer = CustomerSerializer(customer)
+            serializer = CurrentCustomerSerializer(customer)
         elif request.method == "PUT":
-            serializer = CustomerSerializer(customer, data=request.data)
+            serializer = CurrentCustomerSerializer(customer, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
         return Response(serializer.data)
